@@ -224,9 +224,7 @@ test('content shorter than editor width is correctly padded by caller', () => {
 test('bottomIdx === 1: empty content between borders produces empty prefix line', () => {
   const w = 10;
   const ew = w - 2; // 8
-  // Editor renders just two border lines (no content)
-  const lines = [editorBorder(ew), editorBorder(ew)];
-  // lines.length < 3 → early return, use 3 lines with empty content instead
+  // lines.length < 3 → early return; use 3 lines with empty content
   const lines3 = [editorBorder(ew), padTo('', ew), editorBorder(ew)];
   const result = renderPromptPrefix(lines3, w, B, P, I);
 

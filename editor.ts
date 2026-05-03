@@ -8,6 +8,7 @@
  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import type { EditorTheme } from '@mariozechner/pi-tui';
 import {
   CustomEditor,
   type ExtensionAPI,
@@ -156,7 +157,7 @@ export function registerEditor(pi: ExtensionAPI) {
   let editorEnabled = true;
 
   function createEditorFactory() {
-    return (tui: any, theme: Theme, keybindings: any) =>
+    return (tui: any, theme: EditorTheme, keybindings: any) =>
       new PromptPrefixEditor(tui, theme, keybindings);
   }
 
@@ -184,11 +185,11 @@ export function registerEditor(pi: ExtensionAPI) {
       if (editorEnabled) {
         disable(ctx);
         updateSettingsFlag(ctx.cwd, 'customEditor', false);
-        return 'Editor disabled';
+        return 'powerline input-editor disabled';
       } else {
         enable(ctx);
         updateSettingsFlag(ctx.cwd, 'customEditor', true);
-        return 'Editor enabled';
+        return 'powerline input-editor enabled';
       }
     },
     /** Whether the editor is currently enabled. */

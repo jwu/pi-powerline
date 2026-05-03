@@ -125,11 +125,11 @@ export function registerFooter(pi: ExtensionAPI) {
       if (enabled) {
         disable(ctx);
         updateSettingsFlag(ctx.cwd, 'customFooter', false);
-        return 'Footer disabled';
+        return 'powerline footer disabled';
       } else {
         enable(ctx);
         updateSettingsFlag(ctx.cwd, 'customFooter', true);
-        return 'Footer enabled';
+        return 'powerline footer enabled';
       }
     },
     /** Whether the footer is currently enabled. */

@@ -49,8 +49,6 @@ test('gradientLine keeps spaces uncolored', () => {
   const input = 'A   B   C';
   const result = gradientLine(input);
 
-  // Count spaces — they should appear as plain spaces
-  const spaceCount = (result.match(/ (?!\[\d)/g) || []).length;
   // There should be 6 spaces in the input, and they should not be wrapped
   // with ANSI codes (they'll be plain ' ' chars)
   assert.ok(result.includes('   '));

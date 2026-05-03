@@ -48,6 +48,10 @@
 - 代码使用 2 空格缩进
 - 代码注释必须使用英文
 - 注释力求简洁
+- 编辑 `.ts` / `.json` 文件后，必须运行三轮检查：
+  1. `bun prettier --write <files>` — 格式化
+  2. `bun tsc --noEmit --ignoreDeprecations 6.0` — 类型检查
+  3. `bun test` — 单元测试
 
 ### 创建
 

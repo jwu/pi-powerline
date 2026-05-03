@@ -135,11 +135,11 @@ export function registerHeader(pi: ExtensionAPI) {
       if (headerEnabled) {
         disable(ctx);
         updateSettingsFlag(ctx.cwd, 'customHeader', false);
-        return 'Header disabled';
+        return 'powerline header disabled';
       } else {
         enable(ctx);
         updateSettingsFlag(ctx.cwd, 'customHeader', true);
-        return 'Header enabled';
+        return 'powerline header enabled';
       }
     },
     /** Whether the header is currently enabled. */
