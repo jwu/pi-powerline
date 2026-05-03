@@ -1,10 +1,16 @@
 {
   "name": "pi-powerline",
   "version": "0.1.0",
-  "description": "Powerline-style UI extensions for pi coding agent (custom editor, footer, header)",
+  "description": "Powerline-style UI extensions for pi coding agent (custom editor, breadcrumb, footer, header)",
   "type": "module",
   "files": [
-    "*.ts"
+    "index.ts",
+    "editor.ts",
+    "breadcrumb.ts",
+    "widget.ts",
+    "footer.ts",
+    "header.ts",
+    "settings.ts"
   ],
   "keywords": [
     "pi-package",
@@ -25,7 +31,13 @@
   "pi": {
     "extensions": [
       "./index.ts"
-    ]
+    ],
+    "image": "https://github.com/user-attachments/assets/9ee65cd5-8501-4502-ba69-0209b19e0499"
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": "*",
+    "@mariozechner/pi-ai": "*",
+    "@mariozechner/pi-tui": "*"
   },
   "devDependencies": {
     "husky": "^9.1.7",
