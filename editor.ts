@@ -5,7 +5,6 @@
  * Switches to bash-mode coloring when the prompt starts with !.
  * Editor is always enabled; breadcrumb mode controls whether widget info is embedded.
  */
-import { basename } from 'node:path';
 import { type EditorTheme, truncateToWidth, visibleWidth } from '@mariozechner/pi-tui';
 import {
   CustomEditor,
@@ -14,6 +13,7 @@ import {
   type Theme,
   type ThemeColor,
 } from '@mariozechner/pi-coding-agent';
+import { getBreadcrumbData, renderBreadcrumbInfo } from './breadcrumb.ts';
 import { readPowerlineSettings } from './settings.ts';
 
 /** Pure transform: add > prompt prefix and borders to rendered editor lines. */
@@ -58,36 +58,6 @@ function renderPromptPrefix(
   }
 
   return result;
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// nerd font detection & widget layout helpers (inline, mirrors widget.ts)
-// ═══════════════════════════════════════════════════════════════════════════
-
-function hasNerdFonts(): boolean {
-  if (process.env.POWERLINE_NERD_FONTS === '1') return true;
-  if (process.env.POWERLINE_NERD_FONTS === '0') return false;
-  if (process.env.GHOSTTY_RESOURCES_DIR) return true;
-  const term = (process.env.TERM_PROGRAM || '').toLowerCase();
-  return ['iterm', 'wezterm', 'kitty', 'ghostty', 'alacritty'].some((t) => term.includes(t));
-}
-
-const NERD_ED = hasNerdFonts();
-const ICON_MODEL = NERD_ED ? '\uF4BC' : '';
-const ICON_FOLDER = NERD_ED ? '\uF115' : 'dir';
-const SEP = NERD_ED ? '\uE0B1' : '|';
-
-function withIcon(icon: string, text: string): string {
-  return icon ? `${icon} ${text}` : text;
-}
-
-// hex → ANSI true color (model/folder use hex, match widget.ts colors)
-function hexFg(hex: string, text: string): string {
-  const h = hex.replace('#', '');
-  const r = parseInt(h.slice(0, 2), 16);
-  const g = parseInt(h.slice(2, 4), 16);
-  const b = parseInt(h.slice(4, 6), 16);
-  return `\x1b[38;2;${r};${g};${b}m${text}`;
 }
 
 // live state, updated on enable / model_select
@@ -143,15 +113,8 @@ export class PromptPrefixEditor extends CustomEditor {
     if (breadcrumbMode === 'inner') {
       const ctx = liveCtx;
       if (ctx && theme) {
-        const cwd = ctx.cwd ?? process.cwd();
-        const folder = basename(cwd) || cwd;
-        const modelName = ctx.model?.name || ctx.model?.id || 'no-model';
-
-        const modelText = withIcon(ICON_MODEL, modelName);
-        const folderText = withIcon(ICON_FOLDER, folder);
-
-        const infoPart =
-          hexFg('#d787af', modelText) + theme.fg('dim', ` ${SEP} `) + hexFg('#00afaf', folderText);
+        const data = getBreadcrumbData(ctx);
+        const infoPart = renderBreadcrumbInfo(data, theme, false);
 
         const infoWidth = visibleWidth(infoPart);
         // '─ ' (2) + info + ' ' (1) + dashes → total width

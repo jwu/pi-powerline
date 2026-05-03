@@ -1,19 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-
-// ── reimplemented helpers for unit isolation ──
-
-function withIcon(icon: string, text: string): string {
-  return icon ? `${icon} ${text}` : text;
-}
-
-function hexFg(hex: string, text: string): string {
-  const h = hex.replace('#', '');
-  const r = parseInt(h.slice(0, 2), 16);
-  const g = parseInt(h.slice(2, 4), 16);
-  const b = parseInt(h.slice(4, 6), 16);
-  return `\x1b[38;2;${r};${g};${b}m${text}`;
-}
+import {
+  hexFg,
+  ICON_FOLDER,
+  ICON_MODEL,
+  renderBreadcrumbInfo,
+  SEP,
+  withIcon,
+} from '../breadcrumb.ts';
 
 // ═══════════════════════════════════════════════════
 // withIcon
@@ -64,36 +58,31 @@ function makeTheme(): any {
 /** Render one line simulating the live render path (model → folder). */
 function renderWidgetLine(modelName: string, folder: string): string {
   const theme = makeTheme();
-  const iconModel = '';
-  const iconFolder = 'dir';
-  const sep = '|';
-
-  const modelText = withIcon(iconModel, modelName);
-  const folderText = withIcon(iconFolder, folder);
-
-  const line =
-    hexFg('#d787af', modelText) +
-    theme.fg('dim', ` ${sep} `) +
-    hexFg('#00afaf', folderText) +
-    '\x1b[0m';
-
-  return line;
+  const data = {
+    modelName,
+    folder,
+    modelText: withIcon(ICON_MODEL, modelName),
+    folderText: withIcon(ICON_FOLDER, folder),
+  };
+  return renderBreadcrumbInfo(data, theme, true);
 }
 
 test('widget render includes model name in magenta', () => {
   const line = renderWidgetLine('claude-sonnet', 'myproj');
-  assert.ok(line.includes('\x1b[38;2;215;135;175mclaude-sonnet'));
+  const expectText = ICON_MODEL ? `${ICON_MODEL} claude-sonnet` : 'claude-sonnet';
+  assert.ok(line.includes(`\x1b[38;2;215;135;175m${expectText}`));
 });
 
 test('widget render includes folder in cyan', () => {
   const line = renderWidgetLine('m1', 'src');
   assert.ok(line.includes('\x1b[38;2;0;175;175m'));
-  assert.ok(line.includes('dir src'));
+  const expectText = ICON_FOLDER ? `${ICON_FOLDER} src` : 'src';
+  assert.ok(line.includes(expectText));
 });
 
 test('widget render includes dim separator', () => {
   const line = renderWidgetLine('m', 'f');
-  assert.ok(line.includes('{dim} | {/}'));
+  assert.ok(line.includes(`{dim} ${SEP} {/}`));
 });
 
 test('widget render output ends with ANSI reset', () => {
@@ -105,8 +94,9 @@ test('widget render structure: model → sep → folder', () => {
   const line = renderWidgetLine('MODEL', 'DIR');
 
   const modelIdx = line.indexOf('MODEL');
-  const sepIdx = line.indexOf('{dim} | {/}');
-  const dirIdx = line.indexOf('dir DIR');
+  const sepIdx = line.indexOf(`{dim} ${SEP} {/}`);
+  const dirText = ICON_FOLDER ? `${ICON_FOLDER} DIR` : 'DIR';
+  const dirIdx = line.indexOf(dirText);
 
   assert.ok(modelIdx < sepIdx, 'model before sep');
   assert.ok(sepIdx < dirIdx, 'sep before folder');
