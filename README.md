@@ -1,14 +1,20 @@
 # pi-powerline
 
-Powerline-style UI extensions for [pi](https://github.com/badlogic/pi-mono) coding agent: custom editor, footer, and header.
+Powerline-style UI extensions for [pi](https://github.com/badlogic/pi-mono) coding agent: custom editor, breadcrumb widget, footer, and header.
+
+![pi-powerline screenshot](https://github.com/user-attachments/assets/9ee65cd5-8501-4502-ba69-0209b19e0499)
 
 ## Features
 
-**Custom editor** — Replaces the default editor with a bordered input area using a `❯` prompt prefix. Switches to bash-mode coloring automatically when the prompt starts with `!`.
+**Custom editor** — Always-on bordered input area with a `❯` prompt prefix. Switches to bash-mode coloring when the prompt starts with `!`. Breadcrumb info (model → directory) can be embedded in the top border.
 
-**Custom footer** — A compact status bar showing token usage (`↑input ↓output`), session cost, active model, and current git branch.
+**Breadcrumb widget** — Displays current model → working directory above the editor, shown only when breadcrumb mode is `top`.
 
-**Custom header** — A gradient-colored ASCII PI logo rendered with ANSI 256-color codes, replacing the built-in header and keybinding hints.
+**Custom footer** — A compact status bar showing token usage (`↑input ↓output` + cache read/write), context usage % with auto-compact indicator, session cost, thinking level, git branch, and extension statuses. Updates in real-time during streaming.
+
+**Custom header** — A gradient-colored PI logo rendered with ANSI 256-color codes, replacing the built-in header.
+
+> Highly inspired by [nicobailon/pi-powerline-footer](https://github.com/nicobailon/pi-powerline-footer).
 
 ## Installation
 
@@ -40,33 +46,48 @@ Restart pi to activate.
 
 ## Usage
 
-All three extensions activate automatically on session start. Each can be toggled via flags or commands:
-
-| Extension | Flag (settings.json) | Command |
-|-----------|---------------------|---------|
-| Editor    | `customEditor` (default: `true`) | `/powerline editor` |
-| Footer    | `customFooter` (default: `true`) | `/powerline footer` |
-| Header    | `customHeader` (default: `true`) | `/powerline header` |
+All extensions activate automatically on session start. Each can be configured via the `/powerline` command.
 
 ### Settings
 
-Disable individual extensions in `.pi/settings.json`:
+Configure in `.pi/settings.json`:
 
 ```json
 {
-  "customEditor": false,
-  "customFooter": true,
-  "customHeader": true
+  "breadcrumb": "inner",
+  "footer": true,
+  "header": true
 }
 ```
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `breadcrumb` | `"hide"` \| `"top"` \| `"inner"` | `"inner"` | Breadcrumb display mode |
+| `footer` | `boolean` | `true` | Enable custom footer |
+| `header` | `boolean` | `true` | Enable gradient-logo header |
+
+**Breadcrumb modes:**
+
+- `hide` — No breadcrumb display
+- `top` — Breadcrumb as a widget above the editor
+- `inner` — Breadcrumb embedded in the editor's top border
 
 ### Commands
 
 | Command | Description |
 |---------|-------------|
-| `/powerline editor` | Toggle custom editor on/off |
-| `/powerline footer` | Toggle custom footer on/off |
-| `/powerline header` | Toggle custom header on/off |
+| `/powerline` | Show current powerline settings |
+| `/powerline breadcrumb:hide` | Disable breadcrumb |
+| `/powerline breadcrumb:top` | Breadcrumb as top widget |
+| `/powerline breadcrumb:inner` | Breadcrumb in editor border |
+| `/powerline footer:on` | Enable custom footer |
+| `/powerline footer:off` | Disable custom footer |
+| `/powerline header:on` | Enable custom header |
+| `/powerline header:off` | Disable custom header |
+
+### Nerd Fonts
+
+The breadcrumb and footer use Nerd Font icons when a compatible terminal is detected (iTerm, WezTerm, Kitty, Ghostty, Alacritty). Set `POWERLINE_NERD_FONTS=1` or `POWERLINE_NERD_FONTS=0` to explicitly enable/disable.
 
 ## Development
 
@@ -75,13 +96,17 @@ Disable individual extensions in `.pi/settings.json`:
 ```
 .
 ├── index.ts              # Single entry point (default export)
-├── editor.ts             # Editor module → registerEditor()
-├── footer.ts             # Footer module → registerFooter()
-├── header.ts             # Header module → registerHeader()
+├── editor.ts             # Custom editor with prompt prefix
+├── breadcrumb.ts         # Shared breadcrumb data & rendering helpers
+├── widget.ts             # Top widget (shown when breadcrumb=top)
+├── footer.ts             # Custom footer (token stats, git, thinking level)
+├── header.ts             # Gradient-logo header
+├── settings.ts           # Shared .pi/settings.json read/write helpers
 ├── tests/
 │   ├── editor.test.ts
 │   ├── footer.test.ts
-│   └── header.test.ts
+│   ├── header.test.ts
+│   └── widget.test.ts
 ├── .pi/
 │   ├── settings.json
 │   ├── APPEND_SYSTEM.md
@@ -98,22 +123,24 @@ Disable individual extensions in `.pi/settings.json`:
 
 ### Architecture
 
-`index.ts` is the single entry point registered in `package.json` → `"pi": { "extensions": ["./index.ts"] }`. It imports and calls three registration functions:
+`index.ts` is the single entry point registered in `package.json` → `"pi": { "extensions": ["./index.ts"] }`. It registers four extensions:
 
 ```ts
 import type { ExtensionAPI } from '@mariozechner/pi-coding-agent';
 import { registerEditor } from './editor.ts';
 import { registerFooter } from './footer.ts';
 import { registerHeader } from './header.ts';
+import { registerWidget } from './widget.ts';
 
 export default function (pi: ExtensionAPI) {
   registerEditor(pi);
   registerFooter(pi);
   registerHeader(pi);
+  registerWidget(pi);
 }
 ```
 
-Each module (`editor.ts`, `footer.ts`, `header.ts`) exports a `registerXxx(pi: ExtensionAPI)` function that subscribes to pi lifecycle events and registers flags. The unified `/powerline <module>` command toggles individual modules and persists changes to `.pi/settings.json`.
+Settings are managed via `settings.ts` — a shared module that reads/writes `.pi/settings.json`. When `/powerline` changes a setting, it emits a `powerline_settings_changed` event that all modules listen to for live reconfiguration.
 
 ### Code quality
 
@@ -168,7 +195,7 @@ bun test
 npm run test:bun
 ```
 
-Tests use bun's built-in test runner (compatible with `node:test`). Run `bun run test` for the Node.js variant.
+Tests use bun's built-in test runner (compatible with `node:test`). Run `npm run test` for the Node.js variant.
 
 ### Testing a single extension
 
@@ -176,10 +203,11 @@ Tests use bun's built-in test runner (compatible with `node:test`). Run `bun run
 pi -e ./index.ts
 ```
 
-Then verify each extension:
-- Editor: type text → should see `❯` prefix with top/bottom borders
-- Footer: check bottom bar → should show model name, token stats, git branch
-- Header: startup screen → should show gradient-colored PI logo
+Then verify:
+- **Header**: startup screen → should show gradient-colored PI logo
+- **Editor**: type text → should see `❯` prefix with `─` borders; type `!command` → bash-mode coloring
+- **Breadcrumb**: check top border or widget → should show model name and folder
+- **Footer**: check bottom bar → should show model, token stats, git branch, thinking level
 
 ## License
 
