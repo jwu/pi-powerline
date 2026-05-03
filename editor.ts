@@ -7,8 +7,8 @@
  * Toggle at runtime with /editor command.
  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
-import { join } from 'node:path';
-import type { EditorTheme } from '@mariozechner/pi-tui';
+import { basename, join } from 'node:path';
+import { type EditorTheme, truncateToWidth, visibleWidth } from '@mariozechner/pi-tui';
 import {
   CustomEditor,
   type ExtensionAPI,
@@ -59,6 +59,40 @@ function renderPromptPrefix(
 
   return result;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// nerd font detection & widget layout helpers (inline, mirrors widget.ts)
+// ═══════════════════════════════════════════════════════════════════════════
+
+function hasNerdFonts(): boolean {
+  if (process.env.POWERLINE_NERD_FONTS === '1') return true;
+  if (process.env.POWERLINE_NERD_FONTS === '0') return false;
+  if (process.env.GHOSTTY_RESOURCES_DIR) return true;
+  const term = (process.env.TERM_PROGRAM || '').toLowerCase();
+  return ['iterm', 'wezterm', 'kitty', 'ghostty', 'alacritty'].some((t) => term.includes(t));
+}
+
+const NERD_ED = hasNerdFonts();
+const ICON_MODEL = NERD_ED ? '\uF4BC' : '';
+const ICON_FOLDER = NERD_ED ? '\uF115' : 'dir';
+const SEP = NERD_ED ? '\uE0B1' : '|';
+
+function withIcon(icon: string, text: string): string {
+  return icon ? `${icon} ${text}` : text;
+}
+
+// hex → ANSI true color (model/folder use hex, match widget.ts colors)
+function hexFg(hex: string, text: string): string {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `\x1b[38;2;${r};${g};${b}m${text}`;
+}
+
+// widget info live state, updated by enable/model_select
+let liveCtx: ExtensionContext | null = null;
+let liveEditorTui: any = null;
 
 let currentTheme: Theme | null = null;
 
@@ -132,13 +166,51 @@ export class PromptPrefixEditor extends CustomEditor {
         }
       : PromptPrefixEditor.colorTokens;
 
-    return renderPromptPrefix(
+    const result = renderPromptPrefix(
       lines,
       width,
       color(tokens.border, '─'),
       color(tokens.prefix, '❯'),
       tokens.indent ? color(tokens.indent, ' ') : ' ',
     );
+
+    // Embed widget info (model + folder) into the top border line
+    // Format: '─ model sep folder ────────────────'
+    const ctx = liveCtx;
+    if (ctx && theme) {
+      const cwd = ctx.cwd ?? process.cwd();
+      const folder = basename(cwd) || cwd;
+      const modelName = ctx.model?.name || ctx.model?.id || 'no-model';
+
+      const modelText = withIcon(ICON_MODEL, modelName);
+      const folderText = withIcon(ICON_FOLDER, folder);
+
+      const infoPart =
+        hexFg('#d787af', modelText) + theme.fg('dim', ` ${SEP} `) + hexFg('#00afaf', folderText);
+
+      const infoWidth = visibleWidth(infoPart);
+      // '─ ' (2) + info + ' ' (1) + dashes → total width
+      let paddingLen = width - 3 - infoWidth;
+      let displayInfo = infoPart;
+
+      if (paddingLen < 2) {
+        // info too wide or not enough dashes, truncate with ellipsis, keep at least 2 dashes
+        const minDashes = 2;
+        const availForInfo = width - 3 - minDashes;
+        if (availForInfo > 0) {
+          displayInfo = truncateToWidth(infoPart, availForInfo, '...');
+          paddingLen = width - 3 - visibleWidth(displayInfo);
+        }
+      }
+
+      if (paddingLen >= 0) {
+        const borderColored = color(tokens.border, '─');
+        result[0] =
+          borderColored + ' ' + displayInfo + ' ' + color(tokens.border, '─'.repeat(paddingLen));
+      }
+    }
+
+    return result;
   }
 }
 
@@ -157,18 +229,23 @@ export function registerEditor(pi: ExtensionAPI) {
   let editorEnabled = true;
 
   function createEditorFactory() {
-    return (tui: any, theme: EditorTheme, keybindings: any) =>
-      new PromptPrefixEditor(tui, theme, keybindings);
+    return (tui: any, theme: EditorTheme, keybindings: any) => {
+      liveEditorTui = tui;
+      return new PromptPrefixEditor(tui, theme, keybindings);
+    };
   }
 
   function enable(ctx: ExtensionContext) {
     editorEnabled = true;
+    liveCtx = ctx;
     currentTheme = ctx.ui.theme;
     ctx.ui.setEditorComponent(createEditorFactory());
   }
 
   function disable(ctx: ExtensionContext) {
     editorEnabled = false;
+    liveCtx = null;
+    liveEditorTui = null;
     ctx.ui.setEditorComponent(undefined);
   }
 
@@ -177,6 +254,13 @@ export function registerEditor(pi: ExtensionAPI) {
     if (getSettingsFlag(ctx.cwd, 'customEditor', true)) {
       enable(ctx);
     }
+  });
+
+  // keep widget info in top border in sync when model/cwd changes
+  pi.on('model_select', (_event, ctx) => {
+    if (!editorEnabled) return;
+    liveCtx = ctx;
+    liveEditorTui?.requestRender();
   });
 
   /** Toggle the custom editor on/off and persist to settings.json. */
