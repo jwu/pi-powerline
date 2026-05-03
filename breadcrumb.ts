@@ -22,8 +22,8 @@ export function hasNerdFonts(): boolean {
 const NERD = hasNerdFonts();
 
 export const ICON_MODEL = NERD ? '\uF4BC' : '';
-export const ICON_FOLDER = NERD ? '\uF115' : 'dir';
-export const SEP = NERD ? '\uE0B1' : '|';
+export const ICON_FOLDER = NERD ? '\uF115' : '';
+export const SEP = NERD ? '\uf054' : '/';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // helpers
