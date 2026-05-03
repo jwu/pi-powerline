@@ -2,7 +2,7 @@
  * Custom Widget Extension
  *
  * Powerline-style status widget displayed above the input editor.
- * Shows:  model → thinking level → current folder.
+ * Shows:  model → current folder.
  *
  * Controlled by .pi/settings.json → customWidget (boolean, default true).
  * Toggle at runtime with /powerline widget.
@@ -64,24 +64,10 @@ function hasNerdFonts(): boolean {
 const NERD = hasNerdFonts();
 const ICON_MODEL = NERD ? '\uEC19' : '';
 const ICON_FOLDER = NERD ? '\uF115' : 'dir';
-const ICON_THINK = NERD ? '\uF0E7' : '';
 const SEP = NERD ? '\uE0B1' : '|';
-
-const THINK_LABELS: Record<string, string> = {
-  minimal: 'min',
-  low: 'low',
-  medium: 'med',
-  high: 'high',
-  xhigh: 'xhi',
-};
 
 function withIcon(icon: string, text: string): string {
   return icon ? `${icon} ${text}` : text;
-}
-
-function formatThinkLevel(level: string): string {
-  const label = THINK_LABELS[level] ?? level;
-  return withIcon(ICON_THINK, `think:${label}`);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -89,20 +75,11 @@ function formatThinkLevel(level: string): string {
 // ═══════════════════════════════════════════════════════════════════════════
 
 let liveCtx: ExtensionContext | null = null;
-let liveThinkLevel = 'off';
 let liveTui: any = null;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // widget renderer
 // ═══════════════════════════════════════════════════════════════════════════
-
-const THINK_COLORS: Record<string, string> = {
-  high: 'thinkingHigh',
-  xhigh: 'thinkingXhigh',
-  minimal: 'thinkingMinimal',
-  low: 'thinkingLow',
-  medium: 'thinkingMedium',
-};
 
 // hex → ANSI true color (model/folder use hex, not pi theme tokens)
 function hexFg(hex: string, text: string): string {
@@ -126,16 +103,12 @@ function createWidgetRenderer() {
         const cwd = ctx?.cwd ?? process.cwd();
         const modelName = ctx?.model?.name || ctx?.model?.id || 'no-model';
         const folder = basename(cwd) || cwd;
-        const level = liveThinkLevel;
 
         const modelText = withIcon(ICON_MODEL, modelName);
-        const thinkText = formatThinkLevel(level);
         const folderText = withIcon(ICON_FOLDER, folder);
 
         const line =
           hexFg('#d787af', modelText) +
-          theme.fg('dim', ` ${SEP} `) +
-          theme.fg((THINK_COLORS[level] ?? 'thinkingOff') as any, thinkText) +
           theme.fg('dim', ` ${SEP} `) +
           hexFg('#00afaf', folderText) +
           '\x1b[0m';
@@ -164,7 +137,6 @@ export function registerWidget(pi: ExtensionAPI) {
   function enable(ctx: ExtensionContext) {
     widgetEnabled = true;
     liveCtx = ctx;
-    liveThinkLevel = pi.getThinkingLevel();
     ctx.ui.setWidget('powerline-status', createWidgetRenderer(), {
       placement: 'aboveEditor',
     });
@@ -183,17 +155,9 @@ export function registerWidget(pi: ExtensionAPI) {
     }
   });
 
-  pi.on('thinking_level_select', (event, ctx) => {
-    if (!widgetEnabled) return;
-    liveCtx = ctx;
-    liveThinkLevel = event.level;
-    liveTui?.requestRender();
-  });
-
   pi.on('model_select', (_event, ctx) => {
     if (!widgetEnabled) return;
     liveCtx = ctx;
-    liveThinkLevel = pi.getThinkingLevel();
     liveTui?.requestRender();
   });
 
