@@ -12,7 +12,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { basename } from 'node:path';
 import { join } from 'node:path';
 import type { ExtensionAPI, ExtensionContext, Theme } from '@mariozechner/pi-coding-agent';
-import { visibleWidth } from '@mariozechner/pi-tui';
+import { truncateToWidth, visibleWidth } from '@mariozechner/pi-tui';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // settings helpers
@@ -114,8 +114,10 @@ function createWidgetRenderer() {
           '\x1b[0m';
 
         const visLen = visibleWidth(line);
-        const pad = Math.max(0, width - visLen);
-        return [line + ' '.repeat(pad)];
+        if (visLen > width) {
+          return [truncateToWidth(line, width, '...')];
+        }
+        return [line + ' '.repeat(width - visLen)];
       },
     };
   };
