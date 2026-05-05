@@ -147,8 +147,10 @@ export function updateTheme(theme: Theme): void {
   currentTheme = theme;
 }
 
-/** Register the custom editor extension. Editor is always enabled; breadcrumb mode controls info embedding. */
+/** Register the custom editor extension. Controlled by powerline master switch + breadcrumb mode. */
 export function registerEditor(pi: ExtensionAPI) {
+  let editorEnabled = false;
+
   function createEditorFactory() {
     return (tui: any, theme: EditorTheme, keybindings: any) => {
       liveEditorTui = tui;
@@ -157,15 +159,24 @@ export function registerEditor(pi: ExtensionAPI) {
   }
 
   function enable(ctx: ExtensionContext) {
+    editorEnabled = true;
     liveCtx = ctx;
     currentTheme = ctx.ui.theme;
     breadcrumbMode = readPowerlineSettings(ctx.cwd).breadcrumb;
     ctx.ui.setEditorComponent(createEditorFactory());
   }
 
-  // always enable on session start
+  function disable(ctx: ExtensionContext) {
+    editorEnabled = false;
+    liveEditorTui = null;
+    ctx.ui.setEditorComponent(undefined);
+  }
+
+  // enable on session start if powerline master switch is on
   pi.on('session_start', (_event, ctx) => {
-    enable(ctx);
+    if (readPowerlineSettings(ctx.cwd).powerline) {
+      enable(ctx);
+    }
   });
 
   // keep widget info in sync when model/cwd changes
@@ -175,11 +186,18 @@ export function registerEditor(pi: ExtensionAPI) {
     liveEditorTui?.requestRender();
   });
 
-  // re-render on /powerline command (settings changed)
+  // re-evaluate on /powerline command (settings changed)
   pi.events.on('powerline_settings_changed', (ctx) => {
     const c = ctx as ExtensionContext;
-    breadcrumbMode = readPowerlineSettings(c.cwd).breadcrumb;
+    const s = readPowerlineSettings(c.cwd);
+    breadcrumbMode = s.breadcrumb;
     liveCtx = c;
-    liveEditorTui?.requestRender();
+    if (s.powerline && !editorEnabled) {
+      enable(c);
+    } else if (!s.powerline && editorEnabled) {
+      disable(c);
+    } else if (editorEnabled) {
+      liveEditorTui?.requestRender();
+    }
   });
 }

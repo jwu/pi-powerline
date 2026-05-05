@@ -8,6 +8,12 @@ import { readPowerlineSettings, writePowerlineSetting } from './settings.ts';
 
 export default function (pi: ExtensionAPI) {
   // flags
+  pi.registerFlag('powerline', {
+    description: 'Enable pi-powerline extensions',
+    type: 'boolean',
+    default: true,
+  });
+
   pi.registerFlag('breadcrumb', {
     description: 'Breadcrumb display mode: hide, top, inner',
     type: 'string',
@@ -37,6 +43,11 @@ export default function (pi: ExtensionAPI) {
     description: 'Configure powerline: breadcrumb, footer, header',
     getArgumentCompletions: (prefix: string): AutocompleteItem[] | null => {
       const items: AutocompleteItem[] = [
+        {
+          value: 'info',
+          label: 'info',
+          description: 'Show current powerline settings',
+        },
         {
           value: 'breadcrumb:hide',
           label: 'breadcrumb:hide',
@@ -79,10 +90,21 @@ export default function (pi: ExtensionAPI) {
     handler: async (args, ctx) => {
       const arg = args?.trim().toLowerCase();
 
-      // no args: show status
+      // no args: toggle master switch
       if (!arg) {
-        const { breadcrumb, footer, header } = readPowerlineSettings(ctx.cwd);
+        const { powerline } = readPowerlineSettings(ctx.cwd);
+        const next = !powerline;
+        writePowerlineSetting(ctx.cwd, 'powerline', next);
+        pi.events.emit('powerline_settings_changed', ctx);
+        ctx.ui.notify(`powerline → ${next ? 'on' : 'off'}`, 'info');
+        return;
+      }
+
+      // show status
+      if (arg === 'info') {
+        const { powerline, breadcrumb, footer, header } = readPowerlineSettings(ctx.cwd);
         const lines = [
+          `powerline: ${powerline ? 'on' : 'off'}`,
           `breadcrumb: ${breadcrumb}`,
           `footer: ${footer ? 'on' : 'off'}`,
           `header: ${header ? 'on' : 'off'}`,
@@ -95,7 +117,7 @@ export default function (pi: ExtensionAPI) {
       const colonIdx = arg.indexOf(':');
       if (colonIdx === -1) {
         ctx.ui.notify(
-          'Usage: /powerline <breadcrumb:hide|top|inner|footer:on|off|header:on|off>',
+          'Usage: /powerline <info|breadcrumb:hide|top|inner|footer:on|off|header:on|off>',
           'warning',
         );
         return;

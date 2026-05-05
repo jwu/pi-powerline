@@ -77,17 +77,19 @@ export function registerHeader(pi: ExtensionAPI) {
     ctx.ui.setHeader(undefined);
   }
 
-  // auto-enable on session start if header setting is true
+  // auto-enable on session start if powerline master switch + header setting are both on
   pi.on('session_start', (_event, ctx) => {
     if (!ctx.hasUI) return;
-    if (readPowerlineSettings(ctx.cwd).header) {
+    const s = readPowerlineSettings(ctx.cwd);
+    if (s.powerline && s.header) {
       enable(ctx);
     }
   });
 
   // re-evaluate on model switch
   pi.on('model_select', (_event, ctx) => {
-    const show = readPowerlineSettings(ctx.cwd).header;
+    const s = readPowerlineSettings(ctx.cwd);
+    const show = s.powerline && s.header;
     if (show && !headerEnabled) {
       enable(ctx);
     } else if (!show && headerEnabled) {
@@ -98,7 +100,8 @@ export function registerHeader(pi: ExtensionAPI) {
   // re-evaluate on /powerline command (settings changed)
   pi.events.on('powerline_settings_changed', (ctx) => {
     const c = ctx as ExtensionContext;
-    const show = readPowerlineSettings(c.cwd).header;
+    const s = readPowerlineSettings(c.cwd);
+    const show = s.powerline && s.header;
     if (show && !headerEnabled) {
       enable(c);
     } else if (!show && headerEnabled) {

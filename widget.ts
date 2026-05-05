@@ -64,21 +64,22 @@ export function registerWidget(pi: ExtensionAPI) {
     ctx.ui.setWidget('powerline-status', undefined);
   }
 
-  // enable only when breadcrumb mode is "top"
+  // enable only when powerline master switch is on and breadcrumb mode is "top"
   pi.on('session_start', (_event, ctx) => {
     if (!ctx.hasUI) return;
-    const { breadcrumb } = readPowerlineSettings(ctx.cwd);
-    if (breadcrumb === 'top') {
+    const s = readPowerlineSettings(ctx.cwd);
+    if (s.powerline && s.breadcrumb === 'top') {
       enable(ctx);
     }
   });
 
   // re-evaluate on model switch (breadcrumb setting may have changed)
   pi.on('model_select', (_event, ctx) => {
-    const { breadcrumb } = readPowerlineSettings(ctx.cwd);
-    if (breadcrumb === 'top' && !widgetEnabled) {
+    const s = readPowerlineSettings(ctx.cwd);
+    const show = s.powerline && s.breadcrumb === 'top';
+    if (show && !widgetEnabled) {
       enable(ctx);
-    } else if (breadcrumb !== 'top' && widgetEnabled) {
+    } else if (!show && widgetEnabled) {
       disable(ctx);
     } else if (widgetEnabled) {
       liveCtx = ctx;
@@ -89,10 +90,11 @@ export function registerWidget(pi: ExtensionAPI) {
   // re-evaluate on /powerline command (settings changed)
   pi.events.on('powerline_settings_changed', (ctx) => {
     const c = ctx as ExtensionContext;
-    const { breadcrumb } = readPowerlineSettings(c.cwd);
-    if (breadcrumb === 'top' && !widgetEnabled) {
+    const s = readPowerlineSettings(c.cwd);
+    const show = s.powerline && s.breadcrumb === 'top';
+    if (show && !widgetEnabled) {
       enable(c);
-    } else if (breadcrumb !== 'top' && widgetEnabled) {
+    } else if (!show && widgetEnabled) {
       disable(c);
     }
   });

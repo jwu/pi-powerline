@@ -32,7 +32,7 @@
     "extensions": [
       "./index.ts"
     ],
-    "image": "https://github.com/user-attachments/assets/9ee65cd5-8501-4502-ba69-0209b19e0499"
+    "image": "./assets/pi-powerline.png"
   },
   "peerDependencies": {
     "@mariozechner/pi-coding-agent": "*",

@@ -338,10 +338,11 @@ export function registerFooter(pi: ExtensionAPI) {
     ctx.ui.setFooter(undefined);
   }
 
-  // enable on session start if footer setting is true
+  // enable on session start if powerline master switch + footer setting are both on
   pi.on('session_start', (_event, ctx) => {
     autoCompactEnabled = readAutoCompactEnabled(ctx.cwd);
-    if (readPowerlineSettings(ctx.cwd).footer) {
+    const s = readPowerlineSettings(ctx.cwd);
+    if (s.powerline && s.footer) {
       enable(ctx);
     }
   });
@@ -355,7 +356,8 @@ export function registerFooter(pi: ExtensionAPI) {
 
   // model switch may affect reasoning support / provider count
   pi.on('model_select', (_event, ctx) => {
-    const show = readPowerlineSettings(ctx.cwd).footer;
+    const s = readPowerlineSettings(ctx.cwd);
+    const show = s.powerline && s.footer;
     if (show && !enabled) {
       enable(ctx);
     } else if (!show && enabled) {
@@ -369,7 +371,8 @@ export function registerFooter(pi: ExtensionAPI) {
   // re-evaluate on /powerline command (settings changed)
   pi.events.on('powerline_settings_changed', (ctx) => {
     const c = ctx as ExtensionContext;
-    const show = readPowerlineSettings(c.cwd).footer;
+    const s = readPowerlineSettings(c.cwd);
+    const show = s.powerline && s.footer;
     if (show && !enabled) {
       enable(c);
     } else if (!show && enabled) {
