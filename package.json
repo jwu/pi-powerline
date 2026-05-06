@@ -36,8 +36,7 @@
     "release:dry": "GH_TOKEN=$(gh auth token) semantic-release --no-ci --dry-run"
   },
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "release": {
     "repositoryUrl": "https://github.com/jwu/pi-powerline.git",
