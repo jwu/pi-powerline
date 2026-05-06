@@ -31,7 +31,7 @@
     "typecheck": "bun tsc --noEmit --ignoreDeprecations 6.0",
     "format": "prettier --write '**/*.ts'",
     "format:check": "prettier --check '**/*.ts'",
-    "prepare": "simple-git-hooks",
+    "prepare": "[ -d .git ] && simple-git-hooks || true",
     "release": "GH_TOKEN=$(gh auth token) semantic-release --no-ci",
     "release:dry": "GH_TOKEN=$(gh auth token) semantic-release --no-ci --dry-run"
   },
