@@ -1,2 +1,0 @@
-bun prettier --check '**/*.ts'
-bun test

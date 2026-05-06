@@ -20,8 +20,6 @@
 │   ├── APPEND_SYSTEM.md    # 追加到 system prompt 的内容
 │   └── extensions/
 │       └── auto-format.ts  # 编辑 ts 文件后自动 prettier
-├── .husky/
-│   └── pre-commit          # commit 前自动 prettier check + bun test
 ├── tsconfig.json           # LSP 类型解析（gitignored，每人按自己 pi 安装路径创建）
 └── .gitignore
 ```
@@ -36,7 +34,7 @@
 
 - 运行时使用 **bun**（`bun test`、`bun prettier`）
 - `.pi/extensions/auto-format.ts` — edit/write 工具操作 ts 文件后自动 prettier
-- `.husky/pre-commit` — git commit 前自动 prettier check + bun test
+- `simple-git-hooks` — git commit 前自动 prettier check + bun test + commitlint
 - 测试使用 `bun test`（兼容 node:test 语法）
 - 格式化配置：单引号、分号、尾随逗号、2 空格缩进、lf 换行、100 字符宽
 

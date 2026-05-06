@@ -35,3 +35,4 @@ Desktop.ini
 *.swo
 *~
 .npmrc
+.husky/_/
