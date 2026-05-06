@@ -1,3 +1,10 @@
+## [0.3.1](https://github.com/jwu/pi-powerline/compare/v0.3.0...v0.3.1) (2026-05-06)
+
+
+### Bug Fixes
+
+* guard prepare script to skip simple-git-hooks outside git repos ([c26bcad](https://github.com/jwu/pi-powerline/commit/c26bcad428ea0a855e9725abb0d269a5f975d09f))
+
 # [0.3.0](https://github.com/jwu/pi-powerline/compare/v0.2.3...v0.3.0) (2026-05-06)
 
 
