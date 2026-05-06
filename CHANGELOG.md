@@ -1,3 +1,15 @@
+# [0.3.0](https://github.com/jwu/pi-powerline/compare/v0.2.3...v0.3.0) (2026-05-06)
+
+
+### Bug Fixes
+
+* remove npm provenance (requires CI, not supported with --no-ci) ([d9e9005](https://github.com/jwu/pi-powerline/commit/d9e90055df72e9d3b991ba48ecd2acbbd3af998b))
+
+
+### Features
+
+* switch from git-cliff to semantic-release, add commitlint, strengthen TUI tests ([4cec86e](https://github.com/jwu/pi-powerline/commit/4cec86e61666436ef1cbc0a1cab3426408a0ce70))
+
 ## [0.2.3] - 2026-05-06
 
 ### 🐛 Bug Fixes
