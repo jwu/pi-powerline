@@ -32,8 +32,8 @@
     "format": "prettier --write '**/*.ts'",
     "format:check": "prettier --check '**/*.ts'",
     "prepare": "[ -d .git ] && husky || true",
-    "release": "semantic-release --no-ci",
-    "release:dry": "semantic-release --no-ci --dry-run"
+    "release": "GH_TOKEN=$(gh auth token) semantic-release --no-ci",
+    "release:dry": "GH_TOKEN=$(gh auth token) semantic-release --no-ci --dry-run"
   },
   "publishConfig": {
     "access": "public",
