@@ -1,3 +1,16 @@
+## [0.2.3] - 2026-05-06
+
+### 🐛 Bug Fixes
+
+- Husky command not found when installed as dependency
+
+### 📚 Documentation
+
+- Credit pi-powerline-footer by nicobailon
+
+### ⚙️ Miscellaneous Tasks
+
+- Update changelog
 ## [0.2.2] - 2026-05-05
 
 ### 🐛 Bug Fixes
