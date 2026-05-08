@@ -1,6 +1,6 @@
 {
   "name": "pi-powerline",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Powerline-style UI extensions for pi coding agent (custom editor, breadcrumb, footer, header)",
   "homepage": "https://github.com/jwu/pi-powerline#readme",
   "repository": {

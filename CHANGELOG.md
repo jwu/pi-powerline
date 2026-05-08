@@ -1,3 +1,16 @@
+# [0.4.0](https://github.com/jwu/pi-powerline/compare/v0.3.1...v0.4.0) (2026-05-08)
+
+
+### Bug Fixes
+
+* respect quiet startup for header info ([fb243f5](https://github.com/jwu/pi-powerline/commit/fb243f5502f3a866ba971a243f7236f02a9cd96a))
+
+
+### Features
+
+* add optional header info ([40a2a29](https://github.com/jwu/pi-powerline/commit/40a2a29d758459962656f098da254939f537b87f))
+* center header status ([963e6ef](https://github.com/jwu/pi-powerline/commit/963e6ef0b0fc30fe896d6356734fcd23d1ae4ff5))
+
 ## [0.3.1](https://github.com/jwu/pi-powerline/compare/v0.3.0...v0.3.1) (2026-05-06)
 
 
