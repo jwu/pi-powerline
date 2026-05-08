@@ -162,7 +162,7 @@ interface RenderHeaderOptions {
 }
 
 function renderHeader(
-  reason: 'startup' | 'reload' | 'new',
+  reason: 'startup' | 'reload' | 'new' | 'resume' | 'fork',
   width: number,
   options: RenderHeaderOptions = {},
 ): string[] {
@@ -218,6 +218,7 @@ test('header centers logo, version, and reason lines', () => {
 
   assert.equal(lines[8], `${' '.repeat(11)}Welcome`);
   assert.ok(lines.slice(1).every((line) => line.length <= 30));
+  assert.equal(lines.at(-1), '');
 });
 
 test('header center-wraps when width is too narrow', () => {
@@ -228,6 +229,14 @@ test('header center-wraps when width is too narrow', () => {
   assert.ok(trimmed.includes('Session'));
   assert.ok(trimmed.includes('Started'));
   assert.ok(lines.slice(1).every((line) => line.length <= 8));
+});
+
+test('header renders resume and fork reason labels', () => {
+  const resumeLines = renderHeader('resume', 80).map(stripAnsi);
+  const forkLines = renderHeader('fork', 80).map(stripAnsi);
+
+  assert.ok(resumeLines.some((line) => line.includes('Session Resumed')));
+  assert.ok(forkLines.some((line) => line.includes('Session Forked')));
 });
 
 test('header hides diagnostic info when quietStartup is false by default', () => {
@@ -275,6 +284,7 @@ test('header shows diagnostic info when quietStartup is true', () => {
 
     assert.ok(lines.includes('[Context]'));
     assert.ok(lines.includes('  • AGENTS.md'));
+    assert.equal(lines.at(-1), '');
   } finally {
     rmSync(cwd, { recursive: true, force: true });
   }

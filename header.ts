@@ -121,6 +121,10 @@ function formatReasonStatus(theme: Theme, reason: SessionStartEvent['reason']): 
       return theme.fg('success', 'Reloaded');
     case 'new':
       return theme.fg('success', 'New Session Started');
+    case 'resume':
+      return theme.fg('success', 'Session Resumed');
+    case 'fork':
+      return theme.fg('success', 'Session Forked');
     default:
       return theme.fg('dim', reason);
   }
@@ -182,7 +186,7 @@ function renderLogo(
     ...centerWrappedLines(formatReasonStatus(theme, reason), width),
   ];
 
-  if (!info) return result;
+  if (!info) return [...result, ''];
 
   const counts = [
     `context: ${info.contextCount}`,
@@ -210,6 +214,7 @@ function renderLogo(
     ),
     '',
     ...renderInfoSection(theme, 'Extensions', info.extensions, width),
+    '',
   ];
 }
 
