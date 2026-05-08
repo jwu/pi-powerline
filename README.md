@@ -19,7 +19,8 @@ pi install npm:pi-powerline
 {
   "breadcrumb": "inner",
   "footer": true,
-  "header": true
+  "header": true,
+  "header-info": false
 }
 ```
 
@@ -29,6 +30,7 @@ pi install npm:pi-powerline
 | `breadcrumb` | `"hide"` / `"top"` / `"inner"` | `"inner"` |
 | `footer` | `true` / `false` | `true` |
 | `header` | `true` / `false` | `true` |
+| `header-info` | `true` / `false` | `false` |
 
 ## Commands
 
@@ -39,6 +41,7 @@ pi install npm:pi-powerline
 | `/powerline breadcrumb:top\|inner\|hide` | Set breadcrumb mode |
 | `/powerline footer:on\|off` | Toggle footer |
 | `/powerline header:on\|off` | Toggle header |
+| `/powerline header-info:on\|off` | Toggle header diagnostic info |
 
 ## License
 

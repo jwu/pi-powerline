@@ -12,17 +12,20 @@ function writeSettingsFile(dir: string, content: unknown): void {
   writeFileSync(join(piDir, 'settings.json'), JSON.stringify(content));
 }
 
+const DEFAULT_SETTINGS = {
+  powerline: true,
+  breadcrumb: 'inner',
+  footer: true,
+  header: true,
+  'header-info': false,
+} as const;
+
 // ── defaults ──
 
 test('empty settings returns defaults', () => {
   const dir = mkdtempSync('pi-settings-test-');
 
-  assert.deepEqual(readPowerlineSettings(dir), {
-    powerline: true,
-    breadcrumb: 'inner',
-    footer: true,
-    header: true,
-  });
+  assert.deepEqual(readPowerlineSettings(dir), DEFAULT_SETTINGS);
 
   rmSync(dir, { recursive: true, force: true });
 });
@@ -30,12 +33,7 @@ test('empty settings returns defaults', () => {
 test('missing .pi/settings.json returns defaults', () => {
   const dir = mkdtempSync('pi-settings-test-');
   // No .pi dir at all
-  assert.deepEqual(readPowerlineSettings(dir), {
-    powerline: true,
-    breadcrumb: 'inner',
-    footer: true,
-    header: true,
-  });
+  assert.deepEqual(readPowerlineSettings(dir), DEFAULT_SETTINGS);
   rmSync(dir, { recursive: true, force: true });
 });
 
@@ -46,10 +44,9 @@ test('partial overrides merge with defaults', () => {
   writeSettingsFile(dir, { powerline: false, breadcrumb: 'top' });
 
   assert.deepEqual(readPowerlineSettings(dir), {
+    ...DEFAULT_SETTINGS,
     powerline: false,
     breadcrumb: 'top',
-    footer: true,
-    header: true,
   });
 
   rmSync(dir, { recursive: true, force: true });
@@ -62,6 +59,7 @@ test('all values overridden', () => {
     breadcrumb: 'hide',
     footer: false,
     header: false,
+    'header-info': true,
   });
 
   assert.deepEqual(readPowerlineSettings(dir), {
@@ -69,6 +67,7 @@ test('all values overridden', () => {
     breadcrumb: 'hide',
     footer: false,
     header: false,
+    'header-info': true,
   });
 
   rmSync(dir, { recursive: true, force: true });
@@ -89,6 +88,9 @@ test('individual boolean fields can be toggled', () => {
   writeSettingsFile(dir, { header: false });
   assert.deepEqual(readPowerlineSettings(dir).header, false);
 
+  writeSettingsFile(dir, { 'header-info': true });
+  assert.deepEqual(readPowerlineSettings(dir)['header-info'], true);
+
   rmSync(dir, { recursive: true, force: true });
 });
 
@@ -98,12 +100,7 @@ test('invalid breadcrumb falls back to default', () => {
   const dir = mkdtempSync('pi-settings-test-');
   writeSettingsFile(dir, { breadcrumb: 'outer' });
 
-  assert.deepEqual(readPowerlineSettings(dir), {
-    powerline: true,
-    breadcrumb: 'inner',
-    footer: true,
-    header: true,
-  });
+  assert.deepEqual(readPowerlineSettings(dir), DEFAULT_SETTINGS);
 
   rmSync(dir, { recursive: true, force: true });
 });
@@ -117,12 +114,13 @@ test('non-boolean powerline falls back to default', () => {
   rmSync(dir, { recursive: true, force: true });
 });
 
-test('non-boolean footer/header falls back to default', () => {
+test('non-boolean footer/header/header-info falls back to default', () => {
   const dir = mkdtempSync('pi-settings-test-');
-  writeSettingsFile(dir, { footer: 1, header: 0 });
+  writeSettingsFile(dir, { footer: 1, header: 0, 'header-info': 'yes' });
 
   assert.deepEqual(readPowerlineSettings(dir).footer, true);
   assert.deepEqual(readPowerlineSettings(dir).header, true);
+  assert.deepEqual(readPowerlineSettings(dir)['header-info'], false);
 
   rmSync(dir, { recursive: true, force: true });
 });
@@ -135,12 +133,7 @@ test('corrupted JSON returns defaults', () => {
   mkdirSync(piDir, { recursive: true });
   writeFileSync(join(piDir, 'settings.json'), '{ broken json');
 
-  assert.deepEqual(readPowerlineSettings(dir), {
-    powerline: true,
-    breadcrumb: 'inner',
-    footer: true,
-    header: true,
-  });
+  assert.deepEqual(readPowerlineSettings(dir), DEFAULT_SETTINGS);
 
   rmSync(dir, { recursive: true, force: true });
 });
@@ -157,10 +150,9 @@ test('extra keys in settings.json do not affect powerline settings', () => {
   });
 
   assert.deepEqual(readPowerlineSettings(dir), {
+    ...DEFAULT_SETTINGS,
     powerline: false,
     breadcrumb: 'hide',
-    footer: true,
-    header: true,
   });
 
   rmSync(dir, { recursive: true, force: true });

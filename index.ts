@@ -32,6 +32,12 @@ export default function (pi: ExtensionAPI) {
     default: true,
   });
 
+  pi.registerFlag('header-info', {
+    description: 'Show diagnostic info in custom header',
+    type: 'boolean',
+    default: false,
+  });
+
   // register all sub-extensions
   registerEditor(pi);
   registerFooter(pi);
@@ -83,6 +89,16 @@ export default function (pi: ExtensionAPI) {
           label: 'header:off',
           description: 'Disable custom header',
         },
+        {
+          value: 'header-info:on',
+          label: 'header-info:on',
+          description: 'Show diagnostic info in header',
+        },
+        {
+          value: 'header-info:off',
+          label: 'header-info:off',
+          description: 'Hide diagnostic info in header',
+        },
       ];
       if (!prefix) return items;
       return items.filter((i) => i.value.startsWith(prefix));
@@ -102,12 +118,14 @@ export default function (pi: ExtensionAPI) {
 
       // show status
       if (arg === 'info') {
-        const { powerline, breadcrumb, footer, header } = readPowerlineSettings(ctx.cwd);
+        const settings = readPowerlineSettings(ctx.cwd);
+        const { powerline, breadcrumb, footer, header } = settings;
         const lines = [
           `powerline: ${powerline ? 'on' : 'off'}`,
           `breadcrumb: ${breadcrumb}`,
           `footer: ${footer ? 'on' : 'off'}`,
           `header: ${header ? 'on' : 'off'}`,
+          `header-info: ${settings['header-info'] ? 'on' : 'off'}`,
         ];
         ctx.ui.notify(lines.join('\n'), 'info');
         return;
@@ -117,7 +135,7 @@ export default function (pi: ExtensionAPI) {
       const colonIdx = arg.indexOf(':');
       if (colonIdx === -1) {
         ctx.ui.notify(
-          'Usage: /powerline <info|breadcrumb:hide|top|inner|footer:on|off|header:on|off>',
+          'Usage: /powerline <info|breadcrumb:hide|top|inner|footer:on|off|header:on|off|header-info:on|off>',
           'warning',
         );
         return;
@@ -158,9 +176,19 @@ export default function (pi: ExtensionAPI) {
           msg = `header → ${val}`;
           break;
         }
+        case 'header-info': {
+          if (val !== 'on' && val !== 'off') {
+            ctx.ui.notify('header-info must be: on or off', 'warning');
+            return;
+          }
+          writePowerlineSetting(ctx.cwd, 'header-info', val === 'on');
+          pi.events.emit('powerline_settings_changed', ctx);
+          msg = `header-info → ${val}`;
+          break;
+        }
         default:
           ctx.ui.notify(
-            'Usage: /powerline <breadcrumb:hide|top|inner|footer:on|off|header:on|off>',
+            'Usage: /powerline <breadcrumb:hide|top|inner|footer:on|off|header:on|off|header-info:on|off>',
             'warning',
           );
           return;
