@@ -1,3 +1,10 @@
+## [0.4.2](https://github.com/jwu/pi-powerline/compare/v0.4.1...v0.4.2) (2026-05-08)
+
+
+### Bug Fixes
+
+* improve header session status ([58d644d](https://github.com/jwu/pi-powerline/commit/58d644d6dafe0c83e0b83eb6c451705c51a5e2d3))
+
 ## [0.4.1](https://github.com/jwu/pi-powerline/compare/v0.4.0...v0.4.1) (2026-05-08)
 
 
