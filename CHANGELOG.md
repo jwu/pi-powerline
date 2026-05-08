@@ -1,3 +1,10 @@
+## [0.4.1](https://github.com/jwu/pi-powerline/compare/v0.4.0...v0.4.1) (2026-05-08)
+
+
+### Bug Fixes
+
+* enable header info by default ([bc229be](https://github.com/jwu/pi-powerline/commit/bc229befa2f552c89249bc5c110b5dde13c306c3))
+
 # [0.4.0](https://github.com/jwu/pi-powerline/compare/v0.3.1...v0.4.0) (2026-05-08)
 
 
