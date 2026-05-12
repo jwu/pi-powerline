@@ -14,9 +14,9 @@ import type {
   SessionStartEvent,
   SlashCommandInfo,
   Theme,
-} from '@mariozechner/pi-coding-agent';
-import { VERSION } from '@mariozechner/pi-coding-agent';
-import { truncateToWidth, wrapTextWithAnsi } from '@mariozechner/pi-tui';
+} from '@earendil-works/pi-coding-agent';
+import { VERSION } from '@earendil-works/pi-coding-agent';
+import { truncateToWidth, wrapTextWithAnsi } from '@earendil-works/pi-tui';
 import { readPowerlineSettings } from './settings.ts';
 
 /** Left-to-right ANSI gradient coloring. Spaces are left uncolored. */

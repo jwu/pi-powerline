@@ -5,7 +5,7 @@
  * widget.ts and editor.ts to render the model→folder breadcrumb.
  */
 import { basename } from 'node:path';
-import type { ExtensionContext, Theme } from '@mariozechner/pi-coding-agent';
+import type { ExtensionContext, Theme } from '@earendil-works/pi-coding-agent';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // nerd font detection

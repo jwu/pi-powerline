@@ -5,8 +5,8 @@
  * Shows:  model → current folder.
  * Only active when breadcrumb mode is "top" in .pi/settings.json.
  */
-import type { ExtensionAPI, ExtensionContext, Theme } from '@mariozechner/pi-coding-agent';
-import { truncateToWidth, visibleWidth } from '@mariozechner/pi-tui';
+import type { ExtensionAPI, ExtensionContext, Theme } from '@earendil-works/pi-coding-agent';
+import { truncateToWidth, visibleWidth } from '@earendil-works/pi-tui';
 import { getBreadcrumbData, renderBreadcrumbInfo } from './breadcrumb.ts';
 import { readPowerlineSettings } from './settings.ts';
 

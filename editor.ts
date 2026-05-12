@@ -5,14 +5,14 @@
  * Switches to bash-mode coloring when the prompt starts with !.
  * Editor is always enabled; breadcrumb mode controls whether widget info is embedded.
  */
-import { type EditorTheme, truncateToWidth, visibleWidth } from '@mariozechner/pi-tui';
+import { type EditorTheme, truncateToWidth, visibleWidth } from '@earendil-works/pi-tui';
 import {
   CustomEditor,
   type ExtensionAPI,
   type ExtensionContext,
   type Theme,
   type ThemeColor,
-} from '@mariozechner/pi-coding-agent';
+} from '@earendil-works/pi-coding-agent';
 import { getBreadcrumbData, renderBreadcrumbInfo } from './breadcrumb.ts';
 import { readPowerlineSettings } from './settings.ts';
 

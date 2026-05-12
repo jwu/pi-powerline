@@ -1,5 +1,5 @@
-import type { ExtensionAPI } from '@mariozechner/pi-coding-agent';
-import type { AutocompleteItem } from '@mariozechner/pi-tui';
+import type { ExtensionAPI } from '@earendil-works/pi-coding-agent';
+import type { AutocompleteItem } from '@earendil-works/pi-tui';
 import { registerEditor } from './editor.ts';
 import { registerFooter } from './footer.ts';
 import { registerHeader } from './header.ts';

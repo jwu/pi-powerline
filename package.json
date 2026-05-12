@@ -77,9 +77,9 @@
     "image": "https://raw.githubusercontent.com/jwu/pi-powerline/refs/heads/main/assets/pi-powerline.png"
   },
   "peerDependencies": {
-    "@mariozechner/pi-ai": "*",
-    "@mariozechner/pi-coding-agent": "*",
-    "@mariozechner/pi-tui": "*"
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.5.3",
