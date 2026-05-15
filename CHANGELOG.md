@@ -1,3 +1,19 @@
+# [0.6.0](https://github.com/jwu/pi-powerline/compare/v0.5.1...v0.6.0) (2026-05-15)
+
+
+### Bug Fixes
+
+* **header:** add missing return in resolvePackageDir npm branch, add tests ([823d4eb](https://github.com/jwu/pi-powerline/commit/823d4ebec8d502c5dd3e07cb9a1c954d62b086bc))
+* **header:** check .pi/npm/node_modules for project-scoped npm packages ([ad2d8d6](https://github.com/jwu/pi-powerline/commit/ad2d8d6a5694ff5371813fcf9e9eaa69e12e3bdc))
+* **header:** resolve npm root via pi-coding-agent instead of pi-subagents ([0ba1051](https://github.com/jwu/pi-powerline/commit/0ba1051a231ad98c4a964658ec0c2a45307cc4c9))
+* **header:** use NVM_DIR/env probe instead of createRequire for npm root ([3081f77](https://github.com/jwu/pi-powerline/commit/3081f77dd49117d831433857c7fd91f89fa1e8c1))
+
+
+### Features
+
+* **header:** add packages and extensions sections, refactor to config-based discovery ([769465d](https://github.com/jwu/pi-powerline/commit/769465d0798548ff7e6098631739c9f5178fc938))
+* **header:** annotate packages with [project]/[global] scope tag ([d451e96](https://github.com/jwu/pi-powerline/commit/d451e96222b1a88f497b07b19fbc386344879417))
+
 ## [0.5.1](https://github.com/jwu/pi-powerline/compare/v0.5.0...v0.5.1) (2026-05-12)
 
 ### Code Refactoring
