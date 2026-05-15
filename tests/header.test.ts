@@ -458,7 +458,7 @@ test('header packages section shows package name with version from local path', 
     const lines = renderHeader('startup', 80, { cwd }).map(stripAnsi);
 
     assert.ok(lines.includes('[Packages]'));
-    assert.ok(lines.some((l) => l.includes('@test/my-pkg (v2.0.0)')));
+    assert.ok(lines.some((l) => l.includes('@test/my-pkg (v2.0.0) [project]')));
   } finally {
     rmSync(cwd, { recursive: true, force: true });
   }
@@ -480,7 +480,7 @@ test('header packages section shows package name without version when missing', 
     const lines = renderHeader('startup', 80, { cwd }).map(stripAnsi);
 
     assert.ok(lines.includes('[Packages]'));
-    assert.ok(lines.some((l) => l.includes('  • no-version-pkg')));
+    assert.ok(lines.some((l) => l.includes('  • no-version-pkg [project]')));
     assert.ok(!lines.some((l) => l.includes('no-version-pkg (v')));
   } finally {
     rmSync(cwd, { recursive: true, force: true });
@@ -507,7 +507,7 @@ test('header packages section deduplicates by source', () => {
     const lines = renderHeader('startup', 80, { cwd }).map(stripAnsi);
 
     // should only appear once
-    const occurrences = lines.filter((l) => l.includes('dup-pkg (v1.0.0)')).length;
+    const occurrences = lines.filter((l) => l.includes('dup-pkg (v1.0.0) [project]')).length;
     assert.equal(occurrences, 1);
   } finally {
     rmSync(cwd, { recursive: true, force: true });
@@ -719,7 +719,7 @@ test('header packages resolves npm package from project-local .pi/npm', () => {
     const lines = renderHeader('startup', 80, { cwd }).map(stripAnsi);
 
     assert.ok(lines.includes('[Packages]'));
-    assert.ok(lines.some((l) => l.includes('pi-local-pkg (v3.1.0)')));
+    assert.ok(lines.some((l) => l.includes('pi-local-pkg (v3.1.0) [project]')));
   } finally {
     rmSync(cwd, { recursive: true, force: true });
   }
@@ -742,7 +742,7 @@ test('header packages shows npm package name without version when not installed'
       const lines = renderHeader('startup', 80, { cwd }).map(stripAnsi);
 
       assert.ok(lines.includes('[Packages]'));
-      assert.ok(lines.some((l) => l.includes('  • missing-pkg')));
+      assert.ok(lines.some((l) => l.includes('  • missing-pkg [project]')));
       assert.ok(!lines.some((l) => l.includes('missing-pkg (v')));
     } finally {
       process.env.HOME = prevHome;

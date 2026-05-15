@@ -392,17 +392,27 @@ function readSettingsArray(path: string, key: string): string[] {
 
 // ── shared: read raw package sources from settings.json ──
 
-function readPackageSources(cwd: string, home = homedir()): string[] {
+interface PackageSource {
+  source: string;
+  scope: 'project' | 'user';
+}
+
+function readPackageSources(cwd: string, home = homedir()): PackageSource[] {
   const globalPkgs = readSettingsArray(join(home, '.pi', 'agent', 'settings.json'), 'packages');
   const projectPkgs = readSettingsArray(join(cwd, '.pi', 'settings.json'), 'packages');
 
   // dedupe: project wins over global
   const seen = new Set<string>();
-  const all: string[] = [];
-  for (const pkg of [...projectPkgs, ...globalPkgs]) {
-    if (seen.has(pkg)) continue;
-    seen.add(pkg);
-    all.push(pkg);
+  const all: PackageSource[] = [];
+  for (const s of projectPkgs) {
+    if (seen.has(s)) continue;
+    seen.add(s);
+    all.push({ source: s, scope: 'project' });
+  }
+  for (const s of globalPkgs) {
+    if (seen.has(s)) continue;
+    seen.add(s);
+    all.push({ source: s, scope: 'user' });
   }
   return all;
 }
@@ -438,15 +448,17 @@ function getPackages(cwd: string, home = homedir()): string[] {
   const sources = readPackageSources(cwd, home);
   const results: string[] = [];
 
-  for (const source of sources) {
+  for (const { source, scope } of sources) {
     const pkgDir = resolvePackageDir(source, cwd, home);
+    const scopeTag = scope === 'project' ? ' [project]' : ' [global]';
     if (!pkgDir) {
       // fallback: show npm package name or raw source
-      results.push(source.startsWith('npm:') ? source.slice(4) : source);
+      const name = source.startsWith('npm:') ? source.slice(4) : source;
+      results.push(name + scopeTag);
       continue;
     }
     const label = readPackageLabel(pkgDir) ?? source;
-    results.push(label);
+    results.push(label + scopeTag);
   }
 
   return results.sort((a, b) => a.localeCompare(b));
