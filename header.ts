@@ -131,9 +131,6 @@ function formatReasonStatus(theme: Theme, reason: SessionStartEvent['reason']): 
 }
 
 interface HeaderInfo {
-  themeName: string;
-  cwd: string;
-  commands: string[];
   prompts: string[];
   skills: string[];
   extensions: string[];
@@ -256,7 +253,7 @@ function formatRelativePath(cwd: string, filePath: string): string {
 function formatDisplayPath(cwd: string, filePath: string): string {
   const home = homedir();
   const rel = relative(cwd, filePath);
-  if (!rel || (!rel.startsWith('..') && !rel.startsWith('/'))) return rel || '.';
+  if (!rel || !rel.startsWith('..')) return rel || '.';
   if (filePath === home) return '~';
   if (filePath.startsWith(`${home}/`)) return `~/${relative(home, filePath)}`;
   return filePath;
@@ -383,8 +380,8 @@ let _npmRootResolved = false;
 function readSettingsArray(path: string, key: string): string[] {
   if (!existsSync(path)) return [];
   try {
-    const json = JSON.parse(readFileSync(path, 'utf-8'));
-    return (json[key] ?? []).map(String);
+    const value = JSON.parse(readFileSync(path, 'utf-8'))[key];
+    return Array.isArray(value) ? value.map(String) : [];
   } catch {
     return [];
   }
@@ -501,20 +498,17 @@ function getExtensionItems(cwd: string, home = homedir()): string[] {
 function shouldShowHeaderInfo(ctx: ExtensionContext, reason: SessionStartEvent['reason']): boolean {
   if (reason !== 'startup' && reason !== 'reload') return false;
   const settings = readPowerlineSettings(ctx.cwd);
-  if (!settings.quietStartup) return false;
-  return settings['header-info'];
+  return settings.quietStartup && settings['header-info'];
 }
 
 function collectHeaderInfo(
   pi: ExtensionAPI,
   ctx: ExtensionContext,
-  theme: Theme,
   contextItems: string[],
   skillItems: string[],
 ): HeaderInfo {
   const commands = typeof pi.getCommands === 'function' ? pi.getCommands() : [];
   const allThemes = typeof ctx.ui.getAllThemes === 'function' ? ctx.ui.getAllThemes() : [];
-  const themeName = theme.name ?? ctx.ui.theme?.name ?? 'current';
   const extensions = getExtensionItems(ctx.cwd);
   const packages = getPackages(ctx.cwd);
   const activeTools =
@@ -523,9 +517,6 @@ function collectHeaderInfo(
       : [];
 
   return {
-    themeName,
-    cwd: ctx.cwd,
-    commands: getCommandNames(commands),
     prompts: getCommandNames(commands, 'prompt'),
     skills: skillItems,
     extensions,
@@ -561,7 +552,7 @@ export function registerHeader(pi: ExtensionAPI) {
             reason,
             width,
             shouldShowHeaderInfo(ctx, reason)
-              ? collectHeaderInfo(pi, ctx, theme, contextItems, skillItems)
+              ? collectHeaderInfo(pi, ctx, contextItems, skillItems)
               : undefined,
           );
         },

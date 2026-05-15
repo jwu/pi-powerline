@@ -43,18 +43,11 @@ function readSettingsFile(settingsPath: string): Record<string, unknown> {
   }
 }
 
-function mergeSettings(
-  globalSettings: Record<string, unknown>,
-  projectSettings: Record<string, unknown>,
-): Record<string, unknown> {
-  return { ...globalSettings, ...projectSettings };
-}
-
 export function readSettings(cwd: string = process.cwd()): Record<string, unknown> {
-  return mergeSettings(
-    readSettingsFile(getSettingsPath()),
-    readSettingsFile(getProjectSettingsPath(cwd)),
-  );
+  return {
+    ...readSettingsFile(getSettingsPath()),
+    ...readSettingsFile(getProjectSettingsPath(cwd)),
+  };
 }
 
 function writeSettings(cwd: string, settings: Record<string, unknown>): void {

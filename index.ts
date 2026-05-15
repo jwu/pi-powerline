@@ -143,58 +143,33 @@ export default function (pi: ExtensionAPI) {
 
       const ns = arg.slice(0, colonIdx);
       const val = arg.slice(colonIdx + 1);
-      let msg = '';
 
-      switch (ns) {
-        case 'breadcrumb': {
-          if (!['hide', 'top', 'inner'].includes(val)) {
-            ctx.ui.notify('breadcrumb must be: hide, top, or inner', 'warning');
-            return;
-          }
-          writePowerlineSetting(ctx.cwd, 'breadcrumb', val);
-          pi.events.emit('powerline_settings_changed', ctx);
-          msg = `breadcrumb → ${val}`;
-          break;
-        }
-        case 'footer': {
-          if (val !== 'on' && val !== 'off') {
-            ctx.ui.notify('footer must be: on or off', 'warning');
-            return;
-          }
-          writePowerlineSetting(ctx.cwd, 'footer', val === 'on');
-          pi.events.emit('powerline_settings_changed', ctx);
-          msg = `footer → ${val}`;
-          break;
-        }
-        case 'header': {
-          if (val !== 'on' && val !== 'off') {
-            ctx.ui.notify('header must be: on or off', 'warning');
-            return;
-          }
-          writePowerlineSetting(ctx.cwd, 'header', val === 'on');
-          pi.events.emit('powerline_settings_changed', ctx);
-          msg = `header → ${val}`;
-          break;
-        }
-        case 'header-info': {
-          if (val !== 'on' && val !== 'off') {
-            ctx.ui.notify('header-info must be: on or off', 'warning');
-            return;
-          }
-          writePowerlineSetting(ctx.cwd, 'header-info', val === 'on');
-          pi.events.emit('powerline_settings_changed', ctx);
-          msg = `header-info → ${val}`;
-          break;
-        }
-        default:
-          ctx.ui.notify(
-            'Usage: /powerline <breadcrumb:hide|top|inner|footer:on|off|header:on|off|header-info:on|off>',
-            'warning',
-          );
+      if (ns === 'breadcrumb') {
+        if (!['hide', 'top', 'inner'].includes(val)) {
+          ctx.ui.notify('breadcrumb must be: hide, top, or inner', 'warning');
           return;
+        }
+        writePowerlineSetting(ctx.cwd, 'breadcrumb', val);
+        pi.events.emit('powerline_settings_changed', ctx);
+        ctx.ui.notify(`breadcrumb → ${val}`, 'info');
+        return;
       }
 
-      ctx.ui.notify(msg, 'info');
+      if (ns === 'footer' || ns === 'header' || ns === 'header-info') {
+        if (val !== 'on' && val !== 'off') {
+          ctx.ui.notify(`${ns} must be: on or off`, 'warning');
+          return;
+        }
+        writePowerlineSetting(ctx.cwd, ns, val === 'on');
+        pi.events.emit('powerline_settings_changed', ctx);
+        ctx.ui.notify(`${ns} → ${val}`, 'info');
+        return;
+      }
+
+      ctx.ui.notify(
+        'Usage: /powerline <breadcrumb:hide|top|inner|footer:on|off|header:on|off|header-info:on|off>',
+        'warning',
+      );
     },
   });
 }

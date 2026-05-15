@@ -16,6 +16,7 @@ import { join } from 'node:path';
 import type { AssistantMessage } from '@earendil-works/pi-ai';
 import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-agent';
 import { truncateToWidth, visibleWidth } from '@earendil-works/pi-tui';
+import { hasNerdFonts, hexFg, withIcon } from './breadcrumb.ts';
 import { readPowerlineSettings } from './settings.ts';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -54,23 +55,11 @@ function formatTokens(count: number): string {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// think level display (mirrors widget.ts style)
+// think level display
 // ═══════════════════════════════════════════════════════════════════════════
-
-function hasNerdFonts(): boolean {
-  if (process.env.POWERLINE_NERD_FONTS === '1') return true;
-  if (process.env.POWERLINE_NERD_FONTS === '0') return false;
-  if (process.env.GHOSTTY_RESOURCES_DIR) return true;
-  const term = (process.env.TERM_PROGRAM || '').toLowerCase();
-  return ['iterm', 'wezterm', 'kitty', 'ghostty', 'alacritty'].some((t) => term.includes(t));
-}
 
 const ICON_THINK = hasNerdFonts() ? '' : '';
 const ICON_GIT = hasNerdFonts() ? '' : '⎇';
-
-function withIcon(icon: string, text: string): string {
-  return icon ? `${icon} ${text}` : text;
-}
 
 const THINK_LABELS: Record<string, string> = {
   minimal: 'min',
@@ -126,15 +115,6 @@ let autoCompactEnabled = true;
 // ═══════════════════════════════════════════════════════════════════════════
 // footer renderer
 // ═══════════════════════════════════════════════════════════════════════════
-
-// hex → ANSI true color (for git branch, not using pi theme tokens)
-function hexFg(hex: string, text: string): string {
-  const h = hex.replace('#', '');
-  const r = parseInt(h.slice(0, 2), 16);
-  const g = parseInt(h.slice(2, 4), 16);
-  const b = parseInt(h.slice(4, 6), 16);
-  return `\x1b[38;2;${r};${g};${b}m${text}`;
-}
 
 /** Sanitize text for single-line status display. */
 function sanitizeStatusText(text: string): string {
@@ -256,48 +236,25 @@ function createFooterRenderer(ctx: ExtensionContext) {
         const rightWidth = visibleWidth(rightSidePlain);
 
         const minPad = 2;
+        const thinkToken = THINK_COLORS[liveThinkLevel || 'off'] ?? 'thinkingOff';
+        const coloredRight = rightSidePlain ? theme.fg(thinkToken, rightSidePlain) : '';
         let statsLine: string;
 
         const totalBase = gitFullWidth + statsLeftWidth + minPad + rightWidth;
         if (totalBase <= width) {
-          // everything fits
           const pad = width - gitFullWidth - statsLeftWidth - rightWidth;
           const dimPadding = pad > 0 ? theme.fg('dim', ' '.repeat(pad)) : '';
-          let coloredRight = '';
-          if (rightSidePlain) {
-            const tl = liveThinkLevel || 'off';
-            coloredRight = theme.fg(THINK_COLORS[tl] ?? 'thinkingOff', rightSidePlain);
-          }
           statsLine = gitFull + dimLeft + dimPadding + coloredRight;
         } else if (gitFullWidth + minPad + rightWidth <= width) {
-          // drop git → fit statsLeft
           const availStats = width - gitFullWidth - minPad - rightWidth;
-          let statsTrimmed: string;
-          let statsTrimmedWidth: number;
-          if (availStats > 0) {
-            statsTrimmed = truncateToWidth(statsLeft, availStats, '');
-            statsTrimmedWidth = visibleWidth(statsTrimmed);
-          } else {
-            statsTrimmed = '';
-            statsTrimmedWidth = 0;
-          }
+          const statsTrimmed = availStats > 0 ? truncateToWidth(statsLeft, availStats, '') : '';
+          const statsTrimmedWidth = visibleWidth(statsTrimmed);
           const pad = width - gitFullWidth - statsTrimmedWidth - rightWidth;
           const dimPadding = pad > 0 ? theme.fg('dim', ' '.repeat(pad)) : '';
-          let coloredRight = '';
-          if (rightSidePlain) {
-            const tl = liveThinkLevel || 'off';
-            coloredRight = theme.fg(THINK_COLORS[tl] ?? 'thinkingOff', rightSidePlain);
-          }
           statsLine = gitFull + theme.fg('dim', statsTrimmed) + dimPadding + coloredRight;
         } else {
-          // drop git, drop right → only stats
           const availStats = width - minPad;
-          let statsTrimmed: string;
-          if (availStats > 0) {
-            statsTrimmed = truncateToWidth(statsLeft, availStats, '');
-          } else {
-            statsTrimmed = '';
-          }
+          const statsTrimmed = availStats > 0 ? truncateToWidth(statsLeft, availStats, '') : '';
           statsLine = theme.fg('dim', statsTrimmed);
         }
 
