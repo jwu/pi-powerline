@@ -1,3 +1,10 @@
+## [0.9.1](https://github.com/jwu/pi-powerline/compare/v0.9.0...v0.9.1) (2026-08-07)
+
+
+### Bug Fixes
+
+* **footer:** support max thinking level color ([870fb3a](https://github.com/jwu/pi-powerline/commit/870fb3a4d38d47de6529643b55b41e4d4a09f5f7))
+
 # [0.9.0](https://github.com/jwu/pi-powerline/compare/v0.8.1...v0.9.0) (2026-08-07)
 
 
