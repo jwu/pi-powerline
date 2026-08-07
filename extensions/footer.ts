@@ -129,6 +129,15 @@ function sanitizeStatusText(text: string): string {
     .trim();
 }
 
+export function isSubscriptionAuth(ctx: ExtensionContext): boolean {
+  const model = ctx.model;
+  if (!model) return false;
+  if (model.provider === 'kimi-coding') return true;
+
+  const provider = ctx.modelRegistry.getProvider(model.provider);
+  return ctx.modelRegistry.isUsingOAuth(model) && provider?.auth.oauth?.isSubscription === true;
+}
+
 function createFooterRenderer(ctx: ExtensionContext) {
   return (tui: any, theme: any, footerData: any) => {
     liveTui = tui;
@@ -219,7 +228,7 @@ function createFooterRenderer(ctx: ExtensionContext) {
           statsParts.push(`CH${latestCacheHitRate.toFixed(1)}%`);
         }
 
-        const usingSubscription = ctx.model ? ctx.modelRegistry.isUsingOAuth(ctx.model) : false;
+        const usingSubscription = isSubscriptionAuth(ctx);
         if (totalCost || usingSubscription) {
           const costStr = `$${totalCost.toFixed(3)}${usingSubscription ? ' (sub)' : ''}`;
           statsParts.push(costStr);

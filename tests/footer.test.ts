@@ -1,5 +1,54 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { isSubscriptionAuth } from '../extensions/footer.ts';
+
+test('subscription auth requires the provider subscription marker', () => {
+  const model = { provider: 'generic-oauth' };
+  const createContext = (isSubscription?: boolean) =>
+    ({
+      model,
+      modelRegistry: {
+        isUsingOAuth() {
+          return true;
+        },
+        getProvider() {
+          return { auth: { oauth: { isSubscription } } };
+        },
+      },
+    }) as any;
+
+  assert.equal(isSubscriptionAuth(createContext(true)), true);
+  assert.equal(isSubscriptionAuth(createContext(false)), false);
+  assert.equal(isSubscriptionAuth(createContext()), false);
+});
+
+test('subscription auth rejects API keys but preserves Kimi Coding behavior', () => {
+  const oauthContext = {
+    model: { provider: 'generic-oauth' },
+    modelRegistry: {
+      isUsingOAuth() {
+        return false;
+      },
+      getProvider() {
+        return { auth: { oauth: { isSubscription: true } } };
+      },
+    },
+  } as any;
+  const kimiContext = {
+    model: { provider: 'kimi-coding' },
+    modelRegistry: {
+      isUsingOAuth() {
+        return false;
+      },
+      getProvider() {
+        return undefined;
+      },
+    },
+  } as any;
+
+  assert.equal(isSubscriptionAuth(oauthContext), false);
+  assert.equal(isSubscriptionAuth(kimiContext), true);
+});
 
 // Reimplement formatTokens inline for unit isolation (matches footer.ts)
 function formatTokens(n: number): string {

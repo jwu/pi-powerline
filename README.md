@@ -1,6 +1,8 @@
 # pi-powerline
 
-Powerline-style UI extensions for [pi](https://github.com/badlogic/pi-mono): custom editor, breadcrumb, footer, and header.
+Powerline-style UI extensions for [pi](https://github.com/earendil-works/pi): custom editor, breadcrumb, footer, and header.
+
+Requires pi 0.84.0 or newer and Node.js 22.19.0 or newer.
 
 Highly inspired by [pi-powerline-footer](https://github.com/nicobailon/pi-powerline-footer).
 
@@ -62,7 +64,7 @@ export PI_NERD_FONTS=1
 
 `header-info` adds diagnostic sections under the header:
 
-- `Context` — loaded system prompt context files, such as `AGENTS.md` and `.pi/APPEND_SYSTEM.md`
+- `Context` — loaded system prompt context files, such as `AGENTS.md`, `AGENTS.override.md`, and `.pi/APPEND_SYSTEM.md`
 - `Skills` — loaded skills
 - `Prompts` — loaded prompt commands
 - `Extensions` — loaded extension packages or paths

@@ -351,6 +351,38 @@ test('header context section displays relative system prompt paths', () => {
   }
 });
 
+test('header context section prefers AGENTS.override.md in the same directory', () => {
+  const cwd = mkdtempSync(join(tmpdir(), 'pi-powerline-header-'));
+  try {
+    enableHeaderInfo(cwd);
+    writeFileSync(join(cwd, 'AGENTS.md'), 'project context');
+    writeFileSync(join(cwd, 'AGENTS.override.md'), 'override context');
+
+    const lines = renderHeader('startup', 80, { cwd }).map(stripAnsi);
+
+    assert.ok(lines.includes('  • AGENTS.override.md'));
+    assert.ok(!lines.includes('  • AGENTS.md'));
+  } finally {
+    rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
+test('header context section ignores a non-file AGENTS.override.md candidate', () => {
+  const cwd = mkdtempSync(join(tmpdir(), 'pi-powerline-header-'));
+  try {
+    enableHeaderInfo(cwd);
+    mkdirSync(join(cwd, 'AGENTS.override.md'));
+    writeFileSync(join(cwd, 'AGENTS.md'), 'project context');
+
+    const lines = renderHeader('startup', 80, { cwd }).map(stripAnsi);
+
+    assert.ok(lines.includes('  • AGENTS.md'));
+    assert.ok(!lines.includes('  • AGENTS.override.md'));
+  } finally {
+    rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
 test('header context section refreshes from before_agent_start with relative paths', () => {
   const cwd = mkdtempSync(join(tmpdir(), 'pi-powerline-header-'));
   try {

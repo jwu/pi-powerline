@@ -264,7 +264,7 @@ function formatDisplayPath(cwd: string, filePath: string): string {
 }
 
 function discoverContextItems(cwd: string): string[] {
-  const candidates = ['AGENTS.md', 'AGENTS.MD', 'CLAUDE.md', 'CLAUDE.MD'];
+  const candidates = ['AGENTS.override.md', 'AGENTS.md', 'AGENTS.MD', 'CLAUDE.md', 'CLAUDE.MD'];
   const items: string[] = [];
   const seen = new Set<string>();
   let currentDir = resolve(cwd);
@@ -273,7 +273,7 @@ function discoverContextItems(cwd: string): string[] {
   while (true) {
     for (const filename of candidates) {
       const filePath = join(currentDir, filename);
-      if (existsSync(filePath) && !seen.has(filePath)) {
+      if (safeStat(filePath)?.isFile() && !seen.has(filePath)) {
         items.unshift(formatRelativePath(cwd, filePath));
         seen.add(filePath);
         break;

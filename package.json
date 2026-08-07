@@ -74,7 +74,7 @@
     "commit-msg": "bun commitlint --edit \"$1\""
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.19.0"
   },
   "pi": {
     "extensions": [
@@ -83,9 +83,9 @@
     "image": "https://raw.githubusercontent.com/jwu/pi-powerline/refs/heads/main/assets/pi-powerline.png"
   },
   "peerDependencies": {
-    "@earendil-works/pi-ai": "*",
-    "@earendil-works/pi-coding-agent": "*",
-    "@earendil-works/pi-tui": "*"
+    "@earendil-works/pi-ai": ">=0.84.0",
+    "@earendil-works/pi-coding-agent": ">=0.84.0",
+    "@earendil-works/pi-tui": ">=0.84.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.5.3",
