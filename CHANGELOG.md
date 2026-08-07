@@ -1,3 +1,10 @@
+# [0.9.0](https://github.com/jwu/pi-powerline/compare/v0.8.1...v0.9.0) (2026-08-07)
+
+
+### Features
+
+* adapt to pi 0.84 ([f0e2991](https://github.com/jwu/pi-powerline/commit/f0e299145e57ad2d3b02c391cd481d84eddc52ff))
+
 ## [0.8.1](https://github.com/jwu/pi-powerline/compare/v0.8.0...v0.8.1) (2026-06-28)
 
 
