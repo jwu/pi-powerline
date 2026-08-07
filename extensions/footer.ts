@@ -67,15 +67,24 @@ const THINK_LABELS: Record<string, string> = {
   medium: 'med',
   high: 'high',
   xhigh: 'xhi',
+  max: 'max',
 };
 
 const THINK_COLORS: Record<string, string> = {
-  high: 'thinkingHigh',
-  xhigh: 'thinkingXhigh',
   minimal: 'thinkingMinimal',
   low: 'thinkingLow',
   medium: 'thinkingMedium',
+  high: 'thinkingHigh',
+  xhigh: 'thinkingXhigh',
+  max: 'thinkingMax',
 };
+
+export function getThinkingLevelDisplay(level: string): { label: string; color: string } {
+  return {
+    label: THINK_LABELS[level] ?? level,
+    color: THINK_COLORS[level] ?? 'thinkingOff',
+  };
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // usage helpers (for fusing live streaming data with persisted entries)
@@ -245,17 +254,15 @@ function createFooterRenderer(ctx: ExtensionContext) {
         const dimLeft = theme.fg('dim', statsLeft);
 
         // right side: think level only, colored (omitted when model lacks reasoning)
+        const thinkingDisplay = getThinkingLevelDisplay(liveThinkLevel || 'off');
         let rightSidePlain = '';
         if (ctx.model?.reasoning) {
-          const tl = liveThinkLevel || 'off';
-          const label = THINK_LABELS[tl] ?? tl;
-          rightSidePlain = withIcon(ICON_THINK, label);
+          rightSidePlain = withIcon(ICON_THINK, thinkingDisplay.label);
         }
         const rightWidth = visibleWidth(rightSidePlain);
 
         const minPad = 2;
-        const thinkToken = THINK_COLORS[liveThinkLevel || 'off'] ?? 'thinkingOff';
-        const coloredRight = rightSidePlain ? theme.fg(thinkToken, rightSidePlain) : '';
+        const coloredRight = rightSidePlain ? theme.fg(thinkingDisplay.color, rightSidePlain) : '';
         let statsLine: string;
 
         const totalBase = gitFullWidth + statsLeftWidth + minPad + rightWidth;

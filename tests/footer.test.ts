@@ -1,6 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isSubscriptionAuth } from '../extensions/footer.ts';
+import { getThinkingLevelDisplay, isSubscriptionAuth } from '../extensions/footer.ts';
+
+test('max thinking level uses the dedicated label and theme color', () => {
+  assert.deepEqual(getThinkingLevelDisplay('max'), {
+    label: 'max',
+    color: 'thinkingMax',
+  });
+});
+
+test('unknown thinking level preserves its label and uses the off color', () => {
+  assert.deepEqual(getThinkingLevelDisplay('future-level'), {
+    label: 'future-level',
+    color: 'thinkingOff',
+  });
+});
 
 test('subscription auth requires the provider subscription marker', () => {
   const model = { provider: 'generic-oauth' };
