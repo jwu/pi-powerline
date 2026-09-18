@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getThinkingLevelDisplay, isSubscriptionAuth } from '../extensions/footer.ts';
+import {
+  getThinkingLevelDisplay,
+  isSubscriptionAuth,
+  pickRightSide,
+} from '../extensions/footer.ts';
 
 test('max thinking level uses the dedicated label and theme color', () => {
   assert.deepEqual(getThinkingLevelDisplay('max'), {
@@ -174,4 +178,53 @@ test('stats parts place CH after R/W and before cost', () => {
     buildStatsParts({ input: 10000, output: 800, cacheRead: 30000, cacheWrite: 5000 }, 0.012),
     ['↑10k', '↓800', 'R30k', 'W5.0k', 'CH66.7%', '$0.012'],
   );
+});
+
+// ── right-side segments (MCP status + think level) ──
+
+test('pickRightSide keeps MCP and think level when both fit', () => {
+  const result = pickRightSide(
+    [
+      { kind: 'mcp', text: 'MCP 3/3', width: 7 },
+      { kind: 'think', text: 'med', width: 3 },
+    ],
+    11,
+  );
+
+  assert.equal(result.width, 11);
+  assert.equal(result.text, 'MCP 3/3 med');
+});
+
+test('pickRightSide drops MCP before the think level', () => {
+  const result = pickRightSide(
+    [
+      { kind: 'mcp', text: 'MCP 3/3', width: 7 },
+      { kind: 'think', text: 'med', width: 3 },
+    ],
+    10,
+  );
+
+  assert.equal(result.width, 3);
+  assert.equal(result.text, 'med');
+});
+
+test('pickRightSide drops everything when nothing fits', () => {
+  const result = pickRightSide(
+    [
+      { kind: 'mcp', text: 'MCP 3/3', width: 7 },
+      { kind: 'think', text: 'med', width: 3 },
+    ],
+    2,
+  );
+
+  assert.equal(result.width, 0);
+  assert.equal(result.text, '');
+});
+
+test('pickRightSide keeps the think level without an MCP segment', () => {
+  const thinkOnly = pickRightSide([{ kind: 'think', text: 'med', width: 3 }], 3);
+  assert.deepEqual(thinkOnly, { width: 3, text: 'med' });
+
+  const tooNarrow = pickRightSide([{ kind: 'think', text: 'med', width: 3 }], 2);
+  assert.deepEqual(tooNarrow, { width: 0, text: '' });
 });

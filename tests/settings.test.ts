@@ -34,6 +34,7 @@ const DEFAULT_SETTINGS = {
   powerline: true,
   breadcrumb: 'inner',
   footer: true,
+  'footer-mcp': true,
   header: true,
   'header-info': true,
   quietStartup: false,
@@ -77,6 +78,7 @@ test('all values overridden', () => {
     powerline: false,
     breadcrumb: 'hide',
     footer: false,
+    'footer-mcp': false,
     header: false,
     'header-info': true,
     quietStartup: true,
@@ -86,6 +88,7 @@ test('all values overridden', () => {
     powerline: false,
     breadcrumb: 'hide',
     footer: false,
+    'footer-mcp': false,
     header: false,
     'header-info': true,
     quietStartup: true,
@@ -105,6 +108,9 @@ test('individual boolean fields can be toggled', () => {
 
   writeSettingsFile(dir, { footer: false });
   assert.deepEqual(readPowerlineSettings(dir).footer, false);
+
+  writeSettingsFile(dir, { 'footer-mcp': false });
+  assert.deepEqual(readPowerlineSettings(dir)['footer-mcp'], false);
 
   writeSettingsFile(dir, { header: false });
   assert.deepEqual(readPowerlineSettings(dir).header, false);
@@ -140,9 +146,16 @@ test('non-boolean powerline falls back to default', () => {
 
 test('non-boolean footer/header/header-info/quietStartup falls back to default', () => {
   const dir = mkdtempSync('pi-settings-test-');
-  writeSettingsFile(dir, { footer: 1, header: 0, 'header-info': 'yes', quietStartup: 'yes' });
+  writeSettingsFile(dir, {
+    footer: 1,
+    'footer-mcp': 1,
+    header: 0,
+    'header-info': 'yes',
+    quietStartup: 'yes',
+  });
 
   assert.deepEqual(readPowerlineSettings(dir).footer, true);
+  assert.deepEqual(readPowerlineSettings(dir)['footer-mcp'], true);
   assert.deepEqual(readPowerlineSettings(dir).header, true);
   assert.deepEqual(readPowerlineSettings(dir)['header-info'], true);
   assert.deepEqual(readPowerlineSettings(dir).quietStartup, false);

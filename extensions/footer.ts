@@ -6,9 +6,12 @@
  * Token stats and context usage come from ctx.sessionManager/ctx.model/ctx.getContextUsage().
  * Git branch, provider count, extension statuses come from footerData.
  * Thinking level comes from pi.getThinkingLevel() + pi.on(thinking_level_select).
+ * The pi-mcp-adapter "mcp" status (e.g. "MCP 3/3") is fused into the right side of
+ * the stats line when footer-mcp is on, instead of taking its own line.
  *
- * Controlled by .pi/settings.json → footer (boolean, default true).
- * Toggle at runtime via /powerline footer:on / footer:off.
+ * Controlled by .pi/settings.json → footer (boolean, default true)
+ * and footer-mcp (boolean, default true).
+ * Toggle at runtime via /powerline footer:on / footer:off / footer-mcp:on / footer-mcp:off.
  */
 
 import { readFileSync, existsSync } from 'node:fs';
@@ -125,6 +128,7 @@ let liveTui: any = null;
 let isStreaming = false;
 let liveAssistantUsage: SessionAssistantUsage | null = null;
 let autoCompactEnabled = true;
+let showFooterMcp = true;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // footer renderer
@@ -138,6 +142,44 @@ function sanitizeStatusText(text: string): string {
     .trim();
 }
 
+/** One right-aligned segment on the stats line (MCP status or think level). */
+export interface RightSegment {
+  kind: 'mcp' | 'think';
+  text: string;
+  width: number;
+}
+
+/** Visible width of consecutive right-aligned segments (single-space separated). */
+function segmentsWidth(segments: RightSegment[]): number {
+  return segments.reduce((sum, s) => sum + s.width, 0) + Math.max(0, segments.length - 1);
+}
+
+function segmentsText(segments: RightSegment[]): string {
+  return segments.map((s) => s.text).join(' ');
+}
+
+/**
+ * Right-side content that fits into `budget` visible columns.
+ * Candidates degrade from the full set to dropping MCP, then to nothing, so the
+ * think level outlives the MCP status when space runs out.
+ */
+export function pickRightSide(
+  segments: RightSegment[],
+  budget: number,
+): { width: number; text: string } {
+  const candidates: RightSegment[][] = [segments];
+  if (segments.some((s) => s.kind === 'mcp')) {
+    candidates.push(segments.filter((s) => s.kind !== 'mcp'));
+  }
+  candidates.push([]);
+
+  for (const candidate of candidates) {
+    const width = segmentsWidth(candidate);
+    if (width <= budget) return { width, text: segmentsText(candidate) };
+  }
+  return { width: 0, text: '' };
+}
+
 export function isSubscriptionAuth(ctx: ExtensionContext): boolean {
   const model = ctx.model;
   if (!model) return false;
@@ -147,7 +189,8 @@ export function isSubscriptionAuth(ctx: ExtensionContext): boolean {
   return ctx.modelRegistry.isUsingOAuth(model) && provider?.auth.oauth?.isSubscription === true;
 }
 
-function createFooterRenderer(ctx: ExtensionContext) {
+/** Build the footer factory; exported for tests. */
+export function createFooterRenderer(ctx: ExtensionContext) {
   return (tui: any, theme: any, footerData: any) => {
     liveTui = tui;
     const unsubBranch = footerData.onBranchChange(() => tui.requestRender());
@@ -250,34 +293,51 @@ function createFooterRenderer(ctx: ExtensionContext) {
           statsLeftWidth = visibleWidth(statsLeft);
         }
 
-        // ── stats line layout: git (green) + left (dim) + padding (dim) + right (colored think level) ──
-        const dimLeft = theme.fg('dim', statsLeft);
+        // ── right side: MCP status (optional) + think level ──
+        const extensionStatuses = footerData.getExtensionStatuses() as Map<string, string>;
+        const mcpRaw = showFooterMcp ? extensionStatuses.get('mcp') : undefined;
+        const mcpStatus = mcpRaw ? sanitizeStatusText(mcpRaw) : '';
 
-        // right side: think level only, colored (omitted when model lacks reasoning)
-        const thinkingDisplay = getThinkingLevelDisplay(liveThinkLevel || 'off');
-        let rightSidePlain = '';
-        if (ctx.model?.reasoning) {
-          rightSidePlain = withIcon(ICON_THINK, thinkingDisplay.label);
+        const rightSegments: RightSegment[] = [];
+        if (mcpStatus) {
+          rightSegments.push({ kind: 'mcp', text: mcpStatus, width: visibleWidth(mcpStatus) });
         }
-        const rightWidth = visibleWidth(rightSidePlain);
+        const thinkingDisplay = getThinkingLevelDisplay(liveThinkLevel || 'off');
+        if (ctx.model?.reasoning) {
+          const thinkPlain = withIcon(ICON_THINK, thinkingDisplay.label);
+          rightSegments.push({
+            kind: 'think',
+            text: theme.fg(thinkingDisplay.color, thinkPlain),
+            width: visibleWidth(thinkPlain),
+          });
+        }
 
         const minPad = 2;
-        const coloredRight = rightSidePlain ? theme.fg(thinkingDisplay.color, rightSidePlain) : '';
-        let statsLine: string;
 
-        const totalBase = gitFullWidth + statsLeftWidth + minPad + rightWidth;
-        if (totalBase <= width) {
-          const pad = width - gitFullWidth - statsLeftWidth - rightWidth;
-          const dimPadding = pad > 0 ? theme.fg('dim', ' '.repeat(pad)) : '';
-          statsLine = gitFull + dimLeft + dimPadding + coloredRight;
-        } else if (gitFullWidth + minPad + rightWidth <= width) {
-          const availStats = width - gitFullWidth - minPad - rightWidth;
-          const statsTrimmed = availStats > 0 ? truncateToWidth(statsLeft, availStats, '') : '';
-          const statsTrimmedWidth = visibleWidth(statsTrimmed);
-          const pad = width - gitFullWidth - statsTrimmedWidth - rightWidth;
-          const dimPadding = pad > 0 ? theme.fg('dim', ' '.repeat(pad)) : '';
-          statsLine = gitFull + theme.fg('dim', statsTrimmed) + dimPadding + coloredRight;
-        } else {
+        const dimLeft = theme.fg('dim', statsLeft);
+
+        // ── stats line layout: git + stats (dim) + padding (dim) + right segments ──
+        // When space runs out: trim stats first, then drop MCP, then drop the think level.
+        const rightSide = pickRightSide(rightSegments, width - gitFullWidth - minPad);
+        const rightWidth = rightSide.width;
+        const coloredRight = rightSide.text;
+
+        let statsLine = '';
+        if (gitFullWidth + minPad + rightWidth <= width) {
+          if (gitFullWidth + statsLeftWidth + minPad + rightWidth <= width) {
+            const pad = width - gitFullWidth - statsLeftWidth - rightWidth;
+            const dimPadding = pad > 0 ? theme.fg('dim', ' '.repeat(pad)) : '';
+            statsLine = gitFull + dimLeft + dimPadding + coloredRight;
+          } else {
+            const availStats = width - gitFullWidth - minPad - rightWidth;
+            const statsTrimmed = availStats > 0 ? truncateToWidth(statsLeft, availStats, '') : '';
+            const statsTrimmedWidth = visibleWidth(statsTrimmed);
+            const pad = width - gitFullWidth - statsTrimmedWidth - rightWidth;
+            const dimPadding = pad > 0 ? theme.fg('dim', ' '.repeat(pad)) : '';
+            statsLine = gitFull + theme.fg('dim', statsTrimmed) + dimPadding + coloredRight;
+          }
+        }
+        if (!statsLine) {
           const availStats = width - minPad;
           const statsTrimmed = availStats > 0 ? truncateToWidth(statsLeft, availStats, '') : '';
           statsLine = theme.fg('dim', statsTrimmed);
@@ -285,14 +345,14 @@ function createFooterRenderer(ctx: ExtensionContext) {
 
         const lines = [statsLine];
 
-        // ── line 3: extension statuses ──
-        const extensionStatuses = footerData.getExtensionStatuses() as Map<string, string>;
-        if (extensionStatuses.size > 0) {
-          const sorted = Array.from(extensionStatuses.entries())
-            .sort(([a], [b]) => a.localeCompare(b))
-            .map(([, text]) => sanitizeStatusText(text));
-          const statusLine = sorted.join(' ');
-          lines.push(truncateToWidth(statusLine, width, theme.fg('dim', '...')));
+        // ── line 3: extension statuses ("mcp" moves to the stats line when enabled) ──
+        const remainingStatuses = Array.from(extensionStatuses.entries())
+          .filter(([key]) => !(showFooterMcp && key === 'mcp'))
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([, text]) => sanitizeStatusText(text))
+          .filter((text) => text.length > 0);
+        if (remainingStatuses.length > 0) {
+          lines.push(truncateToWidth(remainingStatuses.join(' '), width, theme.fg('dim', '...')));
         }
 
         return lines;
@@ -311,6 +371,7 @@ export function registerFooter(pi: ExtensionAPI) {
   function enable(ctx: ExtensionContext) {
     enabled = true;
     liveThinkLevel = pi.getThinkingLevel();
+    showFooterMcp = readPowerlineSettings(ctx.cwd)['footer-mcp'];
     ctx.ui.setFooter(createFooterRenderer(ctx));
   }
 
@@ -359,6 +420,9 @@ export function registerFooter(pi: ExtensionAPI) {
       enable(c);
     } else if (!show && enabled) {
       disable(c);
+    } else if (enabled) {
+      showFooterMcp = s['footer-mcp'];
+      liveTui?.requestRender();
     }
   });
 

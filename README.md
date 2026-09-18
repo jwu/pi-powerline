@@ -29,6 +29,7 @@ Settings are read from both global and project files. Project settings override 
   "powerline": true,
   "breadcrumb": "inner",
   "footer": true,
+  "footer-mcp": true,
   "header": true,
   "header-info": true
 }
@@ -39,6 +40,7 @@ Settings are read from both global and project files. Project settings override 
 | `powerline` | `true` / `false` | `true` | Master switch for all pi-powerline UI extensions |
 | `breadcrumb` | `"hide"` / `"top"` / `"inner"` | `"inner"` | Breadcrumb placement |
 | `footer` | `true` / `false` | `true` | Enable custom footer |
+| `footer-mcp` | `true` / `false` | `true` | Fuse the pi-mcp status into the footer stats line |
 | `header` | `true` / `false` | `true` | Enable custom gradient-logo header |
 | `header-info` | `true` / `false` | `true` | Show header diagnostic info on startup/reload |
 
@@ -59,6 +61,19 @@ For SSH or terminals that cannot be detected reliably, set it explicitly:
 ```bash
 export PI_NERD_FONTS=1
 ```
+
+### Footer MCP status
+
+When [pi-mcp-adapter](https://github.com/nicobailon/pi-mcp-adapter) reports a footer status
+(for example `MCP 3/3` with `mcpFooterStatus: "compact"`), pi-powerline moves it from its own
+line to the right side of the stats line, left of the thinking level:
+
+```
+ ⎇ main  50.0%/200k (auto) ↑1.2k ↓3.4k   →   MCP 3/3 med
+```
+
+Set `footer-mcp` to `false` to keep the MCP status on its own footer line. Other extension
+statuses (such as `filechanges`) always stay on that line.
 
 ### Header info
 
@@ -86,6 +101,7 @@ It is only rendered for `startup` and `reload`, never for new sessions. It also 
 | `/powerline info` | Show current settings |
 | `/powerline breadcrumb:top\|inner\|hide` | Set breadcrumb mode |
 | `/powerline footer:on\|off` | Toggle footer |
+| `/powerline footer-mcp:on\|off` | Toggle MCP status on the stats line |
 | `/powerline header:on\|off` | Toggle header |
 | `/powerline header-info:on\|off` | Toggle header diagnostic info |
 

@@ -26,6 +26,12 @@ export default function (pi: ExtensionAPI) {
     default: true,
   });
 
+  pi.registerFlag('footer-mcp', {
+    description: 'Fuse the pi-mcp status into the footer right side',
+    type: 'boolean',
+    default: true,
+  });
+
   pi.registerFlag('header', {
     description: 'Enable custom gradient-logo header',
     type: 'boolean',
@@ -80,6 +86,16 @@ export default function (pi: ExtensionAPI) {
           description: 'Disable custom footer',
         },
         {
+          value: 'footer-mcp:on',
+          label: 'footer-mcp:on',
+          description: 'Show MCP status on the footer stats line',
+        },
+        {
+          value: 'footer-mcp:off',
+          label: 'footer-mcp:off',
+          description: 'Show MCP status on its own footer line',
+        },
+        {
           value: 'header:on',
           label: 'header:on',
           description: 'Enable custom header',
@@ -124,6 +140,7 @@ export default function (pi: ExtensionAPI) {
           `powerline: ${powerline ? 'on' : 'off'}`,
           `breadcrumb: ${breadcrumb}`,
           `footer: ${footer ? 'on' : 'off'}`,
+          `footer-mcp: ${settings['footer-mcp'] ? 'on' : 'off'}`,
           `header: ${header ? 'on' : 'off'}`,
           `header-info: ${settings['header-info'] ? 'on' : 'off'}`,
         ];
@@ -135,7 +152,7 @@ export default function (pi: ExtensionAPI) {
       const colonIdx = arg.indexOf(':');
       if (colonIdx === -1) {
         ctx.ui.notify(
-          'Usage: /powerline <info|breadcrumb:hide|top|inner|footer:on|off|header:on|off|header-info:on|off>',
+          'Usage: /powerline <info|breadcrumb:hide|top|inner|footer:on|off|footer-mcp:on|off|header:on|off|header-info:on|off>',
           'warning',
         );
         return;
@@ -155,7 +172,7 @@ export default function (pi: ExtensionAPI) {
         return;
       }
 
-      if (ns === 'footer' || ns === 'header' || ns === 'header-info') {
+      if (ns === 'footer' || ns === 'footer-mcp' || ns === 'header' || ns === 'header-info') {
         if (val !== 'on' && val !== 'off') {
           ctx.ui.notify(`${ns} must be: on or off`, 'warning');
           return;
@@ -167,7 +184,7 @@ export default function (pi: ExtensionAPI) {
       }
 
       ctx.ui.notify(
-        'Usage: /powerline <breadcrumb:hide|top|inner|footer:on|off|header:on|off|header-info:on|off>',
+        'Usage: /powerline <breadcrumb:hide|top|inner|footer:on|off|footer-mcp:on|off|header:on|off|header-info:on|off>',
         'warning',
       );
     },

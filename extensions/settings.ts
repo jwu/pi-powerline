@@ -9,6 +9,7 @@ export interface PowerlineSettings {
   powerline: boolean;
   breadcrumb: BreadcrumbMode;
   footer: boolean;
+  'footer-mcp': boolean;
   header: boolean;
   'header-info': boolean;
   quietStartup: boolean;
@@ -18,6 +19,7 @@ const DEFAULTS: PowerlineSettings = {
   powerline: true,
   breadcrumb: 'inner',
   footer: true,
+  'footer-mcp': true,
   header: true,
   'header-info': true,
   quietStartup: false,
@@ -65,6 +67,7 @@ export function readPowerlineSettings(cwd: string): PowerlineSettings {
       ? s.breadcrumb
       : DEFAULTS.breadcrumb) as BreadcrumbMode,
     footer: typeof s.footer === 'boolean' ? s.footer : DEFAULTS.footer,
+    'footer-mcp': typeof s['footer-mcp'] === 'boolean' ? s['footer-mcp'] : DEFAULTS['footer-mcp'],
     header: typeof s.header === 'boolean' ? s.header : DEFAULTS.header,
     'header-info':
       typeof s['header-info'] === 'boolean' ? s['header-info'] : DEFAULTS['header-info'],
