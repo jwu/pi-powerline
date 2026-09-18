@@ -1,3 +1,10 @@
+# [0.10.0](https://github.com/jwu/pi-powerline/compare/v0.9.1...v0.10.0) (2026-09-18)
+
+
+### Features
+
+* **footer:** show pi-mcp status on the stats line right side ([86c4c7a](https://github.com/jwu/pi-powerline/commit/86c4c7ab0019e6569610daf3759f5e00c77fb5d7))
+
 ## [0.9.1](https://github.com/jwu/pi-powerline/compare/v0.9.0...v0.9.1) (2026-08-07)
 
 
