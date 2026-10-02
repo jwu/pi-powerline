@@ -253,6 +253,36 @@ export function countMcpStatus(
   return `MCP ${up}/${servers.length}`;
 }
 
+/** How often, and for how long, to watch the tool list while MCP servers connect. */
+export const MCP_REPAINT_MS = 1000;
+export const MCP_REPAINT_TICKS = 30;
+
+/**
+ * Repaint the TUI whenever the registered tool count changes, and return a stop function.
+ *
+ * MCP servers connect in the background and nothing else repaints the footer when they finish, so
+ * the segment would otherwise only appear after the next keystroke. Watching stops by itself.
+ */
+export function watchToolCount(
+  pi: Pick<ExtensionAPI, 'getAllTools'>,
+  tui: { requestRender(): void },
+  intervalMs: number = MCP_REPAINT_MS,
+  ticks: number = MCP_REPAINT_TICKS,
+): () => void {
+  let count = pi.getAllTools().length;
+  let elapsed = 0;
+  const timer = setInterval(() => {
+    const next = pi.getAllTools().length;
+    if (next !== count) {
+      count = next;
+      tui.requestRender();
+    }
+    if (++elapsed >= ticks) clearInterval(timer);
+  }, intervalMs);
+  timer.unref?.();
+  return () => clearInterval(timer);
+}
+
 /** Build the footer factory; exported for tests. */
 export function createFooterRenderer(ctx: ExtensionContext, pi: ExtensionAPI) {
   // Servers connect in the background, and render() runs several times a second.
@@ -274,10 +304,12 @@ export function createFooterRenderer(ctx: ExtensionContext, pi: ExtensionAPI) {
   return (tui: any, theme: any, footerData: any) => {
     liveTui = tui;
     const unsubBranch = footerData.onBranchChange(() => tui.requestRender());
+    const unwatchTools = watchToolCount(pi, tui);
 
     return {
       dispose() {
         liveTui = null;
+        unwatchTools();
         unsubBranch();
       },
       invalidate() {},

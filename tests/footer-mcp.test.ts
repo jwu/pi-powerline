@@ -3,7 +3,12 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { visibleWidth } from '@earendil-works/pi-tui';
-import { countMcpStatus, mcpNamespace, registerFooter } from '../extensions/footer.ts';
+import {
+  countMcpStatus,
+  mcpNamespace,
+  registerFooter,
+  watchToolCount,
+} from '../extensions/footer.ts';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Render the real footer through registerFooter + session_start, so the
@@ -195,4 +200,31 @@ test('countMcpStatus stays silent until a server registers tools', () => {
   // Covers both "still connecting" and a pi without ToolInfo.namespace.
   assert.equal(countMcpStatus([], ['x']), undefined);
   assert.equal(countMcpStatus([{}], ['x', 'y']), undefined);
+});
+
+test('watchToolCount repaints on tool list changes and stops on its own', async () => {
+  let tools: Array<{ namespace?: { name?: string } }> = [];
+  let repaints = 0;
+  const stop = watchToolCount(
+    { getAllTools: () => tools } as any,
+    { requestRender: () => repaints++ },
+    20,
+    8,
+  );
+
+  await new Promise((resolve) => setTimeout(resolve, 90));
+  assert.equal(repaints, 0, 'a stable tool list must not repaint');
+
+  // An MCP server finishing its handshake adds its tools.
+  tools = [{ namespace: { name: 'mcp__blender' } }];
+  await new Promise((resolve) => setTimeout(resolve, 60));
+  assert.equal(repaints, 1);
+
+  // The watcher uses up its ticks and stops, so later changes are ignored.
+  await new Promise((resolve) => setTimeout(resolve, 90));
+  tools = [];
+  await new Promise((resolve) => setTimeout(resolve, 60));
+  assert.equal(repaints, 1);
+
+  stop();
 });
