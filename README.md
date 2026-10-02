@@ -64,13 +64,23 @@ export PI_NERD_FONTS=1
 
 ### Footer MCP status
 
-When [pi-mcp-adapter](https://github.com/nicobailon/pi-mcp-adapter) reports a footer status
-(for example `MCP 3/3` with `mcpFooterStatus: "compact"`), pi-powerline moves it from its own
-line to the right side of the stats line, left of the thinking level:
+The `mcp` segment sits on the right of the stats line, left of the thinking level:
 
 ```
  ⎇ main  50.0%/200k (auto) ↑1.2k ↓3.4k   →   MCP 3/3 med
 ```
+
+Two sources feed it, in this order:
+
+1. An extension status published under the `mcp` key, for example by
+   [pi-mcp-adapter](https://github.com/nicobailon/pi-mcp-adapter) with `mcpFooterStatus: "compact"`.
+2. The built-in MCP extension, which publishes no footer status. pi-powerline then counts the
+   `mcp__*` namespaces among the registered tools against the enabled entries of
+   `~/.pi/agent/mcp.json` and `<project>/.pi/mcp.json`. The segment stays empty until at least one
+   server has registered its tools.
+
+Either way `MCP 3/3` counts servers that registered tools, not servers whose backing service
+answers: a Blender MCP server reports `connected` while the Blender add-on is not running.
 
 Set `footer-mcp` to `false` to keep the MCP status on its own footer line. Other extension
 statuses (such as `filechanges`) always stay on that line.

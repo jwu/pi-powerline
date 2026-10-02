@@ -15,6 +15,7 @@
  */
 
 import { readFileSync, existsSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { join } from 'node:path';
 import type { AssistantMessage } from '@earendil-works/pi-ai';
 import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-agent';
@@ -189,8 +190,87 @@ export function isSubscriptionAuth(ctx: ExtensionContext): boolean {
   return ctx.modelRegistry.isUsingOAuth(model) && provider?.auth.oauth?.isSubscription === true;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// built-in MCP status
+//
+// pi-mcp-adapter published its own `mcp` extension status, which the renderer
+// fuses into the stats line. The core MCP extension writes no footer status, so
+// without the adapter that segment stays empty. Count the `mcp__*` namespaces
+// among the registered tools against the enabled entries of `mcp.json`.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Server names may contain `-` or `.`; MCP tool namespaces replace those with `_`. */
+export function mcpNamespace(server: string): string {
+  return `mcp__${server.replace(/[^A-Za-z0-9_]/g, '_')}`;
+}
+
+/** `mcpServers` entries of one mcp.json as [name, enabled] pairs. Empty when unreadable. */
+function readMcpServers(path: string): Array<[string, boolean]> {
+  if (!existsSync(path)) return [];
+  try {
+    const parsed = JSON.parse(readFileSync(path, 'utf-8')) as {
+      mcpServers?: Record<string, { enabled?: boolean } | undefined>;
+    };
+    const servers = parsed?.mcpServers;
+    if (!servers || typeof servers !== 'object') return [];
+    return Object.entries(servers).map(([name, config]) => [name, config?.enabled !== false]);
+  } catch {
+    return [];
+  }
+}
+
+/** Enabled servers of the session: the user file first, the project file overriding it. */
+export function enabledMcpServers(cwd: string): string[] {
+  const effective = new Map<string, boolean>();
+  const paths = [
+    join(process.env.HOME ?? homedir(), '.pi', 'agent', 'mcp.json'),
+    join(cwd, '.pi', 'mcp.json'),
+  ];
+  for (const path of paths) {
+    for (const [name, enabled] of readMcpServers(path)) effective.set(name, enabled);
+  }
+  return [...effective].filter(([, enabled]) => enabled).map(([name]) => name);
+}
+
+/**
+ * `MCP <connected>/<configured>`, or undefined when the session configures no server or none of
+ * them registered tools yet. The latter also covers a pi without `ToolInfo.namespace`.
+ *
+ * "connected" means the server registered its tools, which is all the core extension exposes;
+ * it does not prove the backing service (Blender, ComfyUI, a browser) answers.
+ */
+export function countMcpStatus(
+  tools: ReadonlyArray<{ namespace?: { name?: string } }>,
+  servers: readonly string[],
+): string | undefined {
+  if (servers.length === 0) return undefined;
+  const namespaces = new Set(
+    tools.map((tool) => tool.namespace?.name).filter((name): name is string => !!name),
+  );
+  const up = servers.filter((server) => namespaces.has(mcpNamespace(server))).length;
+  // Servers connect in the background; stay silent until at least one has tools.
+  if (up === 0) return undefined;
+  return `MCP ${up}/${servers.length}`;
+}
+
 /** Build the footer factory; exported for tests. */
-export function createFooterRenderer(ctx: ExtensionContext) {
+export function createFooterRenderer(ctx: ExtensionContext, pi: ExtensionAPI) {
+  // Servers connect in the background, and render() runs several times a second.
+  let builtinMcp: { at: number; value: string | undefined } | null = null;
+
+  const builtinMcpStatus = (): string | undefined => {
+    const now = Date.now();
+    if (builtinMcp && now - builtinMcp.at < 2000) return builtinMcp.value;
+    let value: string | undefined;
+    try {
+      value = countMcpStatus(pi.getAllTools(), enabledMcpServers(ctx.cwd));
+    } catch {
+      value = undefined;
+    }
+    builtinMcp = { at: now, value };
+    return value;
+  };
+
   return (tui: any, theme: any, footerData: any) => {
     liveTui = tui;
     const unsubBranch = footerData.onBranchChange(() => tui.requestRender());
@@ -295,8 +375,17 @@ export function createFooterRenderer(ctx: ExtensionContext) {
 
         // ── right side: MCP status (optional) + think level ──
         const extensionStatuses = footerData.getExtensionStatuses() as Map<string, string>;
-        const mcpRaw = showFooterMcp ? extensionStatuses.get('mcp') : undefined;
-        const mcpStatus = mcpRaw ? sanitizeStatusText(mcpRaw) : '';
+        let mcpStatus = '';
+        if (showFooterMcp) {
+          const published = extensionStatuses.get('mcp');
+          if (published) {
+            // Already styled by whoever published it (pi-mcp-adapter used the accent colour).
+            mcpStatus = sanitizeStatusText(published);
+          } else {
+            const builtin = builtinMcpStatus();
+            if (builtin) mcpStatus = theme.fg('accent', builtin);
+          }
+        }
 
         const rightSegments: RightSegment[] = [];
         if (mcpStatus) {
@@ -372,7 +461,7 @@ export function registerFooter(pi: ExtensionAPI) {
     enabled = true;
     liveThinkLevel = pi.getThinkingLevel();
     showFooterMcp = readPowerlineSettings(ctx.cwd)['footer-mcp'];
-    ctx.ui.setFooter(createFooterRenderer(ctx));
+    ctx.ui.setFooter(createFooterRenderer(ctx, pi));
   }
 
   function disable(ctx: ExtensionContext) {
