@@ -73,7 +73,7 @@ function centerTruncate(line: string, width: number): string {
   let result = '';
   let visibleIdx = 0;
 
-  for (let i = 0; i < line.length; ) {
+  for (let i = 0; i < line.length;) {
     const ansi = /^\x1b\[[0-9;]*m/.exec(line.slice(i));
     if (ansi) {
       const code = ansi[0];

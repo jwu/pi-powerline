@@ -170,8 +170,7 @@ function renderHeader(
   let sessionStartHandler: ((event: { reason: string }, ctx: any) => void) | undefined;
   let beforeAgentStartHandler: ((event: any, ctx: any) => void) | undefined;
   let headerFactory:
-    | ((tui: any, theme: any) => { render: (width: number) => string[] })
-    | undefined;
+    ((tui: any, theme: any) => { render: (width: number) => string[] }) | undefined;
   const pi = {
     on(event: string, handler: (event: any, ctx: any) => void) {
       if (event === 'session_start') sessionStartHandler = handler;
