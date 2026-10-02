@@ -1,3 +1,10 @@
+# [0.11.0](https://github.com/jwu/pi-powerline/compare/v0.10.0...v0.11.0) (2026-10-02)
+
+
+### Features
+
+* **footer:** count built-in MCP servers when nothing publishes a status ([c746bb6](https://github.com/jwu/pi-powerline/commit/c746bb6fbf280cf74b8ef59c3f721bab25528df1))
+
 # [0.10.0](https://github.com/jwu/pi-powerline/compare/v0.9.1...v0.10.0) (2026-09-18)
 
 
