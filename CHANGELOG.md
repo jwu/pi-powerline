@@ -1,3 +1,10 @@
+## [0.11.1](https://github.com/jwu/pi-powerline/compare/v0.11.0...v0.11.1) (2026-10-02)
+
+
+### Bug Fixes
+
+* **footer:** repaint when the MCP tool list grows ([db05c6b](https://github.com/jwu/pi-powerline/commit/db05c6b69c74f8ac5e24c7dda5c0d6ad7f6a8e19))
+
 # [0.11.0](https://github.com/jwu/pi-powerline/compare/v0.10.0...v0.11.0) (2026-10-02)
 
 
