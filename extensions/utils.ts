@@ -16,9 +16,13 @@ export function hasNerdFonts(): boolean {
   if (process.env.PI_NERD_FONTS === '1') return (_nerdCache = true);
   if (process.env.PI_NERD_FONTS === '0') return (_nerdCache = false);
   if (process.env.GHOSTTY_RESOURCES_DIR) return (_nerdCache = true);
+  // Herdr's terminal usually renders with a Nerd Font (see config-gpui.toml).
+  if (process.env.HERDR_ENV) return (_nerdCache = true);
 
   const terminal = `${process.env.TERM_PROGRAM || ''} ${process.env.TERM || ''}`.toLowerCase();
-  if (['iterm', 'wezterm', 'kitty', 'ghostty', 'alacritty'].some((t) => terminal.includes(t))) {
+  if (
+    ['iterm', 'wezterm', 'kitty', 'ghostty', 'alacritty', 'herdr'].some((t) => terminal.includes(t))
+  ) {
     return (_nerdCache = true);
   }
 
