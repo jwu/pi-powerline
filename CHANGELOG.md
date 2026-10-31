@@ -1,3 +1,10 @@
+## [0.11.2](https://github.com/jwu/pi-powerline/compare/v0.11.1...v0.11.2) (2026-10-31)
+
+
+### Bug Fixes
+
+* **utils:** 识别 Herdr 终端以启用 Nerd Font 图标 ([c5d3f66](https://github.com/jwu/pi-powerline/commit/c5d3f66105a6adf4ccac79f52a97a5c65c7733e2))
+
 ## [0.11.1](https://github.com/jwu/pi-powerline/compare/v0.11.0...v0.11.1) (2026-10-02)
 
 
