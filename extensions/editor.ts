@@ -78,6 +78,9 @@ export interface PromptPrefixColorTokens {
 export class PromptPrefixEditor extends CustomEditor {
   private readonly tuiRef: any;
 
+  private truncateCacheWidth: number | undefined;
+  private readonly truncateCache = new Map<string, string>();
+
   static colorTokens: PromptPrefixColorTokens = {
     border: 'borderAccent',
     prefix: 'dim',
@@ -157,7 +160,18 @@ export class PromptPrefixEditor extends CustomEditor {
       }
     }
 
-    return result.map((line) => truncateToWidth(line, renderWidth, ''));
+    if (this.truncateCacheWidth !== renderWidth) {
+      this.truncateCache.clear();
+      this.truncateCacheWidth = renderWidth;
+    }
+    return result.map((line) => {
+      const cached = this.truncateCache.get(line);
+      if (cached !== undefined) return cached;
+      const truncated: string = truncateToWidth(line, renderWidth, '');
+      if (this.truncateCache.size >= 128) this.truncateCache.clear();
+      this.truncateCache.set(line, truncated);
+      return truncated;
+    });
   }
 }
 
