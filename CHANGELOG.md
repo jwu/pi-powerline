@@ -1,3 +1,10 @@
+## [0.11.3](https://github.com/jwu/pi-powerline/compare/v0.11.2...v0.11.3) (2026-11-21)
+
+
+### Bug Fixes
+
+* **editor:** 兼容 1.6.0 的只读渲染与光标标记 ([c7441ce](https://github.com/jwu/pi-powerline/commit/c7441ce5e8ab61836db8981c48845de517a26930))
+
 ## [0.11.2](https://github.com/jwu/pi-powerline/compare/v0.11.1...v0.11.2) (2026-10-31)
 
 
