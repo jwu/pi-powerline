@@ -1,13 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { visibleWidth } from '@earendil-works/pi-tui';
 import { PromptPrefixEditor, updateTheme } from '../extensions/editor.ts';
 
 // ── helpers ──
 
-/** Strip ANSI escape codes for visible width calculation. */
-function visibleWidth(str: string): number {
-  return str.replace(/\x1b\[[0-9;]*m/g, '').length;
-}
+// 使用 pi-tui 的宽度计算：1.6.0 的 Editor 会在内容行里放光标标记
+// （APC 序列，显示宽度为 0），朴素的正则长度会把它算进去。
 
 function mockTUI(columns?: number) {
   return {

@@ -24,7 +24,8 @@ function renderPromptPrefix(
   prefixChar: string,
   indentChar: string,
 ): string[] {
-  if (lines.length < 3) return lines;
+  // Pi 1.6+ 的 render() 结果是只读缓存数组：返回副本，避免调用方原地修改。
+  if (lines.length < 3) return [...lines];
 
   let bottomIdx = lines.length - 1;
   for (let i = lines.length - 1; i >= 1; i--) {
