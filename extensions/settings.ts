@@ -81,14 +81,14 @@ export function writePowerlineSetting(
   key: keyof PowerlineSettings,
   value: string | boolean,
 ): void {
-  const s = readSettings(cwd);
+  const s = readSettingsFile(getProjectSettingsPath(cwd));
   s[key] = value;
   writeSettings(cwd, s);
 }
 
 /** Write multiple powerline settings at once, preserving other keys. */
 export function writePowerlineSettings(cwd: string, patch: Partial<PowerlineSettings>): void {
-  const s = readSettings(cwd);
+  const s = readSettingsFile(getProjectSettingsPath(cwd));
   for (const [k, v] of Object.entries(patch)) {
     s[k] = v;
   }
